@@ -26,12 +26,14 @@ public class LoginActivity extends AppCompatActivity {
         final Button bLogin = (Button) findViewById(R.id.bLogin);
         final TextView registerLink = (TextView) findViewById(R.id.tvRegisterHere);
         final ProgressBar spinner = (ProgressBar) findViewById(R.id.progressBar2);
+        final Button goButton = (Button) findViewById(R.id.goButton);
 
         assert etUsername != null;
         assert etPassword != null;
         assert bLogin != null;
         assert registerLink != null;
         assert spinner != null;
+        assert goButton != null;
 
         registerLink.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,7 +57,8 @@ public class LoginActivity extends AppCompatActivity {
                     public void done(ParseUser user, ParseException e) {
                         if (user != null) {
                             // Hooray! The user is logged in.
-                            Toast.makeText(LoginActivity.this, "JUHUU", Toast.LENGTH_SHORT).show();
+                            Intent i = new Intent(LoginActivity.this, MainMenu.class);
+                            startActivity(i);
                         } else {
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -64,12 +67,20 @@ public class LoginActivity extends AppCompatActivity {
                                     bLogin.setEnabled(true);
                                 }
                             });
+                            Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
             }
         });
 
+        goButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(LoginActivity.this, MainMenu.class);
+                startActivity(i);
+            }
+        });
 
 //      Get intent extra and display status
         Bundle extras = getIntent().getExtras();
