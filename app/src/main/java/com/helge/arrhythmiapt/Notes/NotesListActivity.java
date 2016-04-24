@@ -1,8 +1,8 @@
 package com.helge.arrhythmiapt.Notes;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -15,6 +15,7 @@ import com.parse.ParseQueryAdapter;
 public class NotesListActivity extends AppCompatActivity {
 
     private ParseQueryAdapter<ParseObject> mainAdapter;
+    private ParseQueryAdapter<ParseObject> notesAdapter;
     private ListView notesListView;
     private Button newNoteButton;
 
@@ -28,8 +29,10 @@ public class NotesListActivity extends AppCompatActivity {
         mainAdapter = new ParseQueryAdapter<ParseObject>(this, "Note");
         mainAdapter.setTextKey("userText");
 
+        notesAdapter = new NotesAdapter(this);
+
         notesListView = (ListView) findViewById(R.id.notesListView);
-        notesListView.setAdapter(mainAdapter);
+        notesListView.setAdapter(notesAdapter);
         mainAdapter.loadObjects();
 
 
