@@ -23,6 +23,7 @@ public class NotesAdapter extends ParseQueryAdapter<ParseObject> {
         super(context, new ParseQueryAdapter.QueryFactory<ParseObject>() {
             public ParseQuery create() {
                 ParseQuery query = new ParseQuery("Note");
+                query.fromLocalDatastore();
                 return query;
             }
         });

@@ -1,7 +1,11 @@
 package com.helge.arrhythmiapt.Notes;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -18,6 +22,12 @@ public class NotesListActivity extends AppCompatActivity {
     private ParseQueryAdapter<ParseObject> notesAdapter;
     private ListView notesListView;
     private Button newNoteButton;
+    private BroadcastReceiver mFetchtDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mainAdapter.loadObjects();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +70,14 @@ public class NotesListActivity extends AppCompatActivity {
             }
         });
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(mFetchtDataReceiver, new IntentFilter("doneFetchingData"));
 
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mFetchtDataReceiver);
+        super.onDestroy();
     }
 }
