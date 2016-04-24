@@ -18,14 +18,13 @@ import com.parse.ParseQueryAdapter;
 
 public class NotesListActivity extends AppCompatActivity {
 
-    private ParseQueryAdapter<ParseObject> mainAdapter;
     private ParseQueryAdapter<ParseObject> notesAdapter;
     private ListView notesListView;
     private Button newNoteButton;
     private BroadcastReceiver mFetchtDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            mainAdapter.loadObjects();
+            notesAdapter.loadObjects();
         }
     };
 
@@ -35,15 +34,11 @@ public class NotesListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notes_list);
 
 
-
-        mainAdapter = new ParseQueryAdapter<ParseObject>(this, "Note");
-        mainAdapter.setTextKey("userText");
-
         notesAdapter = new NotesAdapter(this);
 
         notesListView = (ListView) findViewById(R.id.notesListView);
         notesListView.setAdapter(notesAdapter);
-        mainAdapter.loadObjects();
+        notesAdapter.loadObjects();
 
 
         newNoteButton = (Button) findViewById(R.id.addButton);
@@ -60,7 +55,7 @@ public class NotesListActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i                = new Intent(NotesListActivity.this, NoteEditActivity.class);
-                ParseObject noteObject  = mainAdapter.getItem(position);
+                ParseObject noteObject = notesAdapter.getItem(position);
                 noteObject.pinInBackground();
 
                 String noteID           = noteObject.getObjectId();
