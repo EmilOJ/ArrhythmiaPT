@@ -27,4 +27,5 @@ dependencies {
     compile 'com.parse:parse-android:1.+'
     compile 'com.parse:parseui-login-android:0.0.1'
     compile 'com.parse:parseui-widget-android:0.0.1'
+    compile 'de.sciss:jwave:1.0.3'
 }
