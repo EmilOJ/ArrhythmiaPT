@@ -31,7 +31,7 @@ public class SignalProcessing extends AppCompatActivity {
     //@Override
     public void ReadECG(Context context) throws IOException {
 
-        //The file is saved in the internal storage , and is found as such:
+        //The file is saved in the internal storage , and is found as such:a
         InputStream is = getResources().openRawResource(R.raw.samples);
         //The file is read:
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
