@@ -14,11 +14,10 @@ import java.util.List;
 
 import jwave.Transform;
 import jwave.transforms.FastWaveletTransform;
-import jwave.transforms.wavelets.Wavelet;
-import jwave.transforms.wavelets.WaveletBuilder;
 import jwave.transforms.wavelets.biorthogonal.BiOrthogonal35;
 
 public class SignalProcessing extends AppCompatActivity {
+
     static final String TAG = "SignalProcessing";
     static final int SEGMENT_LENGTH = 200; // ms (on each side of QRS complex)
     static final int NUMBER_OF_FEATURES = 17;
@@ -28,16 +27,13 @@ public class SignalProcessing extends AppCompatActivity {
     public ArrayList<Double> mSignal = new ArrayList<Double>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<ArrayList<Double>>();
     public List<Integer> mQrs;
-    String waveletName = "BiOrthogonal 3/5";
-    Wavelet biorthogonal35 = WaveletBuilder.create(waveletName);
 
+    //@Override
     public void ReadECG(Context context) throws IOException {
 
         //The file is saved in the internal storage , and is found as such:
-//        AssetManager assetManager = context.getResources().getAssets(); a
-        InputStream is = context.getResources().openRawResource(R.raw.samples);
+        InputStream is = getResources().openRawResource(R.raw.samples);
         //The file is read:
-
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
         try {
@@ -63,6 +59,7 @@ public class SignalProcessing extends AppCompatActivity {
             }
         }
     }
+
 
 
     private void detect_and_classify() {
@@ -151,6 +148,7 @@ public class SignalProcessing extends AppCompatActivity {
     }
 
 
+
     private List<Double> get_features(List<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
         //      - mSegments:  Segmentsed mSignal from segments_around_qrs()
@@ -204,12 +202,12 @@ public class SignalProcessing extends AppCompatActivity {
         return rr_intervals;
     }
 
-    private int classify_segments(List<ArrayList<Double>> segments, List<Double> features) {
+    private int classify_segments(List<List<Double>> segments, List<List<Double>> features) {
         // INPUT:
-        //      - mSegments:
+        //      - segments:
         //      - features:
         // OUTPUT:
-        //      - mSegments:  The three mSegments consisting of ±200 ms around each QRS complex
+        //      - segments:  The three segments consisting of ±200 ms around each QRS complex
         int classification;
 
         // Only use middle segment
@@ -217,20 +215,40 @@ public class SignalProcessing extends AppCompatActivity {
 
 
         // TODO: Get trained SVM classifier weights (trained in MATLAB)
+        ArrayList<Double> svm = new ArrayList<Double>();
+        //The file is saved in the internal storage , and is found as such:
+        InputStream android = getResources().openRawResource(R.raw.svmAndroid);
+        //svmAndroid.model file exported from MATLAB when the right parameters have been saved.
+        //The file is read:
+        BufferedReader reader = new BufferedReader(new InputStreamReader(android));
+
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] RowData = line.split(" ");
+                svm.add(Double.parseDouble(RowData[2])); //insert the right rowData according to the svm from MATLAB
+            }
+        } catch (IOException ex) {
+        } finally {
+            try {
+                android.close();
+            } catch (IOException e) {
+            }
+        }
         // TODO: Implement SVM classification
-//        classification = svm_classify(segment, features);
         classification = 0;
+
 
         return classification;
     }
 
     private void save_classification(int classification) {
         // INPUT:
-        //      - classfication:    from classify_segments()
+        //      - classification:    from classify_segments()
         // Saves classification to database
 
         // TODO: Save classification to database
-        // TDOD: Save mSignal mSegments to database or maybe just QRS locations?
+        // TODO: Save signal segments to database or maybe just QRS locations?
 
     }
 
