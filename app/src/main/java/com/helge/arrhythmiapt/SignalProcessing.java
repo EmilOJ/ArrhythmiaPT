@@ -269,23 +269,28 @@ public class SignalProcessing extends AppCompatActivity {
                             // Save RR-interval of last 5 qrs and use it to
                             // define search window
                             rr = diff(last_qrs);
-                            rr_last = Math.abs(mean(rr(rr != 0)));
+
+                            rr = neglectZeros(rr);
+
+                            rr = abs(rr);
+
+                            rr_last = mean(rr); // neglect zero
                             if (rr_cur < rr_tolerance_phys[1] || rr_cur > rr_tolerance_phys[2]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance = {rr_last * 0.5, rr_last * 1.6};
+                                rr_tolerance = {rr_last*0.5,rr_last*1.6};
                             }
                         }
 
                         //disp(rr_tolerance);
 
                         // Set new max in buffer
-                        window_max_buff = circshift(window_max_buff);
-                        window_max_buff[1] = window_max;
+                        window_max_buff = circshift_double(window_max_buff, 1);
+                        window_max_buff[0] = window_max;
                         // Update threshold as median of last 5 window_max
                         //(window_max_buff) weighted by threshold correction
                         // factor (thresh_correct)
-                        h_thresh = h_thresh_correct * median(window_max_buff(window_max_buff != 0))
+                        h_thresh = h_thresh_correct * median(neglectZeros_double(window_max_buff));
                         ;
                         // Reset window_max
                         window_max = 0;
@@ -353,6 +358,35 @@ public class SignalProcessing extends AppCompatActivity {
         }
         return rr;
     }
+    public int[] neglectZeros(int[] rr) {
+        int j = 0;
+        for (int k = 0; k < rr.length; k++) {
+            if (rr[k] != 0)
+                rr[j++] = rr[k];
+        }
+        int[] newArray = new int[j];
+        System.arraycopy(rr, 0, newArray, 0, j);
+        return newArray;
+    }
+
+    public double[] neglectZeros_double(double[] array) {
+        int j = 0;
+        for (int k = 0; k < array.length; k++) {
+            if (array[k] != 0)
+                array[j++] = array[k];
+        }
+        double[] newArray = new double[j];
+        System.arraycopy(array, 0, newArray, 0, j);
+        return newArray;
+    }
+
+    public int[] abs(int[] array) {
+        for (int i = 0; i < array.length;i++) {
+           array[i] = Math.abs(array[i]);
+        }
+        return array;
+    }
+
     // has to be sorted before - see MD app Fragment
     public static double median(double[] m) {
         int middle = m.length/2;
@@ -365,7 +399,7 @@ public class SignalProcessing extends AppCompatActivity {
 
     // http://stackoverflow.com/questions/4191687/how-to-calculate-mean-median-mode-and-range-from-a-set-of-numbers :
     // http://stackoverflow.com/questions/8835464/qrs-detection-in-java-from-ecg-byte-array
-    public static double mean(double[] m) {
+    public static double mean(int[] m) {
         double sum = 0;
         for (int i = 0; i < m.length; i++) {
             sum += m[i];
@@ -373,8 +407,17 @@ public class SignalProcessing extends AppCompatActivity {
         return sum / m.length;
     }
 
-    public int circshift(int[] array, int shift){
-        int temp = array[array.length]);
+    public int[] circshift(int[] array, int shift){
+        int temp = array[array.length];
+        for (int i = 0; i < array.length-shift;i++){
+            array[array.length-i] = array[array.length-i-1];
+        }
+        array[0] = temp;
+        return array;
+    }
+
+    public double[] circshift_double(double[] array, int shift){
+        double temp = array[array.length];
         for (int i = 0; i < array.length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
         }
@@ -394,7 +437,7 @@ public class SignalProcessing extends AppCompatActivity {
         for (int i = filter_order;i<_signal.size();i++){
             lin_sum = 0;
             for (int j = 0; j < filter_order; j++) {
-                lin_sum += coefficients.get(j)* _signal.get(i - j);
+                lin_sum += coefficients.get(j) * _signal.get(i - j);
             }
             _filtered_signal.add(lin_sum);
         }
@@ -465,7 +508,7 @@ public class SignalProcessing extends AppCompatActivity {
 
       //  int total_segments_length = SEGMENT_LENGTH * 2 + 1;
         List<Double> segment;
-        double pre_qrs, post_qrs, cur_qrs;
+        int pre_qrs, post_qrs, cur_qrs;
 
 
 
@@ -489,7 +532,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-    private ArrayList<Double> get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs) {
+    private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -498,7 +541,7 @@ public class SignalProcessing extends AppCompatActivity {
         //      - features: Computed feature vector
 
 
-        List<Double> features = new ArrayList<Double>();
+        double[] features = new double[NUMBER_OF_FEATURES];
         List<Integer> rr_intervals = compute_RR(qrs);
 
         for (int iSegment = 0; iSegment < segments.size(); iSegment++) {
@@ -510,9 +553,9 @@ public class SignalProcessing extends AppCompatActivity {
             //We have a fs = 320, 40/360 = 0.111, 0.111*300 is 33.33, 300-33.33 = 266.66
 
             // Feature 1
-            features.add(K / rr_intervals.get(0));
+            features[0] = (K / rr_intervals.get(0));
             // Feature 2
-            features.add(K / rr_intervals.get(1));
+            features[1] = (K / rr_intervals.get(1));
 
             // Feature 3-17
             // Implement wavelet transform from Jwave.
