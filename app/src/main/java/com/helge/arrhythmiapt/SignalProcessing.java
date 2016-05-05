@@ -30,8 +30,8 @@ public class SignalProcessing extends AppCompatActivity {
     static final String TAG = "SignalProcessing";
     static final int NUMBER_OF_FEATURES = 17;
     static final int FS = 360; // Sample rate in Hz
-    static final int SEGMENT_LENGTH = (200 / 1000) * FS; // ms (on each side of QRS complex) //burg math.floor
-    static final int REFRACTORY_PERIOD = (250 / 1000) * FS; // ms
+    static final double SEGMENT_LENGTH = (200 / 1000) * FS; // ms (on each side of QRS complex) //burg math.floor
+    static final double REFRACTORY_PERIOD = (250 / 1000) * FS; // ms
     // Instance variable containing ECG mSignal
     public ArrayList<Double> mSignal = new ArrayList<Double>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<ArrayList<Double>>();
@@ -89,7 +89,7 @@ public class SignalProcessing extends AppCompatActivity {
             // Location (array index) of detected QRS. 0 if no QRS detected.
             List<Double> qrs_detected = detect_qrs();
 
-            if (qrs_detected != 0) {
+            if (qrs_detected.size() != 0) {
                 // Add detected QRS location to previous ones (need 3 for classification)
 
                 //mQrs.add(qrs_detected);
@@ -322,6 +322,8 @@ public class SignalProcessing extends AppCompatActivity {
             i = i + 1;
         }
         return qrs_loc;
+
+        //TODO: if qrs_loc contains no ones - return empty list
     }
     // Final function output
 
@@ -418,7 +420,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-    private ArrayList<ArrayList<Double>> segments_around_qrs(List<Integer> qrsArray) {
+    private ArrayList<ArrayList<Double>> segments_around_qrs(List<Double> qrsArray) {
         // INPUT:
         //      - mQrs:      location in sample number of the detected mQrs complex
         //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
@@ -429,7 +431,7 @@ public class SignalProcessing extends AppCompatActivity {
 
       //  int total_segments_length = SEGMENT_LENGTH * 2 + 1;
         List<Double> segment;
-        int pre_qrs, post_qrs, cur_qrs;
+        double pre_qrs, post_qrs, cur_qrs;
 
 
         // TODO: Convert to parallel computing? Iterations do not depend on each other.. except adding them to mSegments list.
