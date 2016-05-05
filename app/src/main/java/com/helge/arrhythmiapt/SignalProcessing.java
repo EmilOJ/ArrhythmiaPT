@@ -32,8 +32,8 @@ public class SignalProcessing extends AppCompatActivity {
     final Context mContext;
     static final int NUMBER_OF_FEATURES = 17;
     static final int FS = 360; // Sample rate in Hz
-    static final int SEGMENT_LENGTH = (int) Math.floor((200 / 1000) * FS); // ms (on each side of QRS complex) //burg math.floor
-    static final int REFRACTORY_PERIOD = (int) Math.floor((250 / 1000) * FS); // ms
+    static final int SEGMENT_LENGTH = (int) Math.floor((200.0 / 1000) * FS); // ms (on each side of QRS complex) //burg math.floor
+    static final int REFRACTORY_PERIOD = (int) Math.floor((250.0 / 1000) * FS); // ms
     // Instance variable containing ECG mSignal
     public List<Double> mSignal = new ArrayList<Double>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<ArrayList<Double>>();
@@ -107,8 +107,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-                // After detecting 3 consequetive QRS complexes
-                // if (qrsArray.size() == 3) {
+
                 // Extract ±200 ms mSegments around QRS. This is used for classification.
                 segments = segments_around_qrs(qrsArray);
 
@@ -168,7 +167,9 @@ public class SignalProcessing extends AppCompatActivity {
         //float[] lowPass;
         //float[] highPass;
 
-        double[] rr_tolerance_phys = {60 / 220 * FS, 60 / 40 * FS};
+        double[] rr_tolerance_phys = new double[2];
+        rr_tolerance_phys[0] = 60.0 / 220 * FS;
+        rr_tolerance_phys[1] = 60.0 / 40 * FS;
         double[] rr_tolerance = rr_tolerance_phys;
 
         //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
@@ -278,7 +279,8 @@ public class SignalProcessing extends AppCompatActivity {
                             if (rr_cur < rr_tolerance_phys[1] || rr_cur > rr_tolerance_phys[2]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance = {rr_last*0.5,rr_last*1.6};
+                                rr_tolerance[0] = rr_last * 0.5;
+                                rr_tolerance[1] = rr_last * 1.6;
                             }
                         }
 
