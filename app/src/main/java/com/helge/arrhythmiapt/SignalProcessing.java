@@ -368,7 +368,7 @@ public class SignalProcessing extends AppCompatActivity {
 
     public static int circshift(int[] array, int shift){
         int temp = array[array.length]);
-        for (int i = 0; i < array-length-shift;i++){
+        for (int i = 0; i < array.length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
         }
         array[0] = temp;
@@ -481,7 +481,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-    private List<Double> get_features(List<ArrayList<Double>> segments, List<Integer> qrs) {
+    private ArrayList<Double> get_features(List<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -534,7 +534,7 @@ public class SignalProcessing extends AppCompatActivity {
         return rr_intervals;
     }
 
-    private int classify_segments(List<List<Double>> segments, List<List<Double>> features) {
+    private int classify_segments(ArrayList<Double> segments, List<Double> features) {
         // INPUT:
         //      - segments:
         //      - features:
@@ -543,7 +543,7 @@ public class SignalProcessing extends AppCompatActivity {
         int classification;
 
         // Only use middle segment
-        List<Double> segment = segments.get(1);
+        ArrayList<Double> segment = segments.get(1);
 
 
 
