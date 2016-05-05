@@ -166,7 +166,11 @@ public class SignalProcessing extends AppCompatActivity {
 
         //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
 
+<<<<<<< Updated upstream
         List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
+=======
+        List<Double> qrs_loc = new ArrayList<Double>(Collections.nCopies(mSignal.size(), 0.0));
+>>>>>>> Stashed changes
         double[] h_thres_array = new double[mSignal.size()]; // TODO
         boolean first_candidate = true;
 
@@ -229,15 +233,15 @@ public class SignalProcessing extends AppCompatActivity {
 
             // Check if refractory period is over
             // (If not, don't check for new QRS)
-            time_since_last_qrs = i - last_qrs[1];
+            time_since_last_qrs =  i - last_qrs[1];
 
-            if (time_since_last_qrs > REFRACTORY_PERIOD || first_candidate == true) {
+            if (time_since_last_qrs > REFRACTORY_PERIOD || first_candidate) {
                 // Check if a candidate QRS was detected
                 if (candidate_detected == true) {
                     // if end of candidate search was reached
                     if (i == end_cand_search) {
 
-                        if (time_since_last_qrs < rr_tolerance[1] && first_candidate == false) {
+                        if (time_since_last_qrs < rr_tolerance[1] && !first_candidate) {
                             // Adjust threshold and search again.
                             h_thresh = 1.1 * h_thresh;
                             i = last_qrs[1] + REFRACTORY_PERIOD;
@@ -297,7 +301,7 @@ public class SignalProcessing extends AppCompatActivity {
                     candidate_pos = i;
                 }
 
-            } else if (time_since_last_qrs > rr_tolerance[2] && first_candidate == false) {
+            } else if (time_since_last_qrs > rr_tolerance[2] && !first_candidate) {
                 // Adjust threshold and search again.
                 h_thresh = 0.9 * h_thresh;
                 i = last_qrs[1] + REFRACTORY_PERIOD;
@@ -322,20 +326,21 @@ public class SignalProcessing extends AppCompatActivity {
             }
             h_thres_array[i] = h_thresh;
             i = i + 1;
+            return qrs_loc;
         }
-        return qrs_loc;
+
 
         //TODO: if qrs_loc contains no ones - return empty list
     }
     // Final function output
 
 
-    public int[] circshift(int[] last_qrs) {
-        for (int i = 0; i < last_qrs.length-1; i++) {
-            last_qrs[4-i] = last_qrs[3-i];
-        }
-        return last_qrs;
-    }
+    //public int[] circshift(int[] last_qrs) {
+    //    for (int i = 0; i < last_qrs.length-1; i++) {
+    //        last_qrs[4-i] = last_qrs[3-i];
+    //    }
+    //    return last_qrs;
+    //}
 
     public int[] diff(int[] last_qrs) {
         int[] rr = new int[4];
@@ -362,6 +367,15 @@ public class SignalProcessing extends AppCompatActivity {
             sum += m[i];
         }
         return sum / m.length;
+    }
+
+    public static double circshift(double[] array, int shift){
+        int temp = array[array.length]);
+        for (int i = 0; i < array-length-shift;i++){
+            array[array.length-i] = array[array.length-i-1];
+        }
+        array[0] = temp;
+        return array;
     }
 
     public List<Double> filter(List<Double> signal, List<Double> coefficients) {
@@ -472,9 +486,9 @@ public class SignalProcessing extends AppCompatActivity {
 
     private List<Double> get_features(List<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
-        //      - mSegments:  Segmentsed mSignal from segments_around_qrs()
-        //      - mQrs:  Segmentsed mSignal from segments_around_qrs()
-        //      - mSignal:  Segmentsed mSignal from segments_around_qrs()
+        //      - mSegments:  Segmented mSignal from segments_around_qrs()
+        //      - mQrs:  Segmented mSignal from segments_around_qrs()
+        //      - mSignal:  Segmented mSignal from segments_around_qrs()
         // OUPUT:
         //      - features: Computed feature vector
 
