@@ -366,7 +366,7 @@ public class SignalProcessing extends AppCompatActivity {
         return sum / m.length;
     }
 
-    public static int circshift(int[] array, int shift){
+    public int circshift(int[] array, int shift){
         int temp = array[array.length]);
         for (int i = 0; i < array.length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
