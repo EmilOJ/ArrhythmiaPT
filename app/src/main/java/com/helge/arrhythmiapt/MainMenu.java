@@ -26,6 +26,8 @@ public class MainMenu extends AppCompatActivity {
             }
         });
 
+        SignalProcessing signalProcessing = new SignalProcessing(this);
+
 
     }
 }

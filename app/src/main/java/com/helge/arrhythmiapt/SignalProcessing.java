@@ -77,10 +77,10 @@ public class SignalProcessing {
 
     }
 
-    private void detect_and_classify() {
+    public void detect_and_classify() {
         List<Integer> qrsArray = new ArrayList<Integer>();
         ArrayList<ArrayList<Double>> segments; // = new ArrayList<ArrayList<Double>>();
-        List<Double> features = new ArrayList<Double>();
+        double[] features = new double[NUMBER_OF_FEATURES];
         int detected_qrs;
         int classification;
 
@@ -198,10 +198,10 @@ public class SignalProcessing {
         mSignal = filter(mSignal,b_high);
 
         // Subtract mean
-        mSignal = mSignal - mean(mSignal);
+        mSignal = demean(mSignal);
 
         // Absolute
-        mSignal = Math.abs(mSignal);
+        mSignal = abs(mSignal);
 
         // Average
         mSignal = filter(mSignal,b_avg);
@@ -270,7 +270,7 @@ public class SignalProcessing {
                         //disp(rr_tolerance);
 
                         // Set new max in buffer
-                        window_max_buff = circshift_double(window_max_buff, 1);
+                        window_max_buff = circshift(window_max_buff, 1);
                         window_max_buff[0] = window_max;
                         // Update threshold as median of last 5 window_max
                         //(window_max_buff) weighted by threshold correction
@@ -371,6 +371,14 @@ public class SignalProcessing {
         return array;
     }
 
+    public List<Double> abs(List<Double> array) {
+        List<Double> absArray = new ArrayList<>();
+        for (int i = 0; i < array.size();i++) {
+            absArray.add(Math.abs(array.get(i)));
+        }
+        return absArray;
+    }
+
     // has to be sorted before - see MD app Fragment
     public static double median(double[] m) {
         int middle = m.length/2;
@@ -391,6 +399,23 @@ public class SignalProcessing {
         return sum / m.length;
     }
 
+    public static double mean(List<Double> m) {
+        double sum = 0;
+        for (int i = 0; i < m.size(); i++) {
+            sum += m.get(i);
+        }
+        return sum / m.size();
+    }
+
+    public static List<Double> demean(List<Double> m) {
+        double mMean = mean(m);
+        List<Double> dSignal = new ArrayList<>();
+        for (int i = 0; i < m.size(); i++) {
+            dSignal.add(m.get(i) - mMean);
+        }
+        return dSignal;
+    }
+
     public int[] circshift(int[] array, int shift){
         int temp = array[array.length];
         for (int i = 0; i < array.length-shift;i++){
@@ -400,7 +425,7 @@ public class SignalProcessing {
         return array;
     }
 
-    public double[] circshift_double(double[] array, int shift){
+    public double[] circshift(double[] array, int shift){
         double temp = array[array.length];
         for (int i = 0; i < array.length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
@@ -461,7 +486,7 @@ public class SignalProcessing {
     }
 
 
-
+//
     private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
