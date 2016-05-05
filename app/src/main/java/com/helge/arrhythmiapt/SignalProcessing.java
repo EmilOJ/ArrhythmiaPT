@@ -126,7 +126,7 @@ public class SignalProcessing extends AppCompatActivity {
         }
     }
 
-    private List<Double> detect_qrs() {
+    private List<Integer> detect_qrs() {
 
 
 
@@ -254,7 +254,7 @@ public class SignalProcessing extends AppCompatActivity {
                             qrs_loc.set(candidate_pos,1);
 
                             // Save last 5 detected qrs
-                            last_qrs = circshift(last_qrs,[0 1]);
+                            last_qrs = circshift(last_qrs);
                             last_qrs[1] = candidate_pos;
 
                             // Save RR-interval of last 5 qrs and use it to
@@ -287,7 +287,7 @@ public class SignalProcessing extends AppCompatActivity {
                         candidate_pos = 0;
                         candidate = 0;
 
-                        if (first_candidate = true) {
+                        if (first_candidate == true) {
                             first_candidate = false;
                         }
                     }
@@ -296,7 +296,7 @@ public class SignalProcessing extends AppCompatActivity {
                     candidate_pos = i;
                 }
 
-            } else if (time_since_last_qrs > rr_tolerance[2] && first_candidate = false) {
+            } else if (time_since_last_qrs > rr_tolerance[2] && first_candidate == false) {
                 // Adjust threshold and search again.
                 h_thresh = 0.9 * h_thresh;
                 i = last_qrs[1] + REFRACTORY_PERIOD;
@@ -339,7 +339,7 @@ public class SignalProcessing extends AppCompatActivity {
     public int[] diff(int[] last_qrs) {
         int[] rr = new int[4];
         for (int i = 0; i < last_qrs.length-1; i++) {
-            rr[i] = last_qrs[i+1]-last_qrs[i];
+            rr[i] = Math.abs(last_qrs[i+1]-last_qrs[i]);
         }
         return rr;
     }
@@ -366,10 +366,10 @@ public class SignalProcessing extends AppCompatActivity {
     public List<Double> filter(List<Double> signal, List<Double> coefficients) {
         List<Double> _signal = signal;
         List<Double> _filtered_signal = new ArrayList<>();
-        int lin_sum;
+        double lin_sum;
         int filter_order = coefficients.size();
         for (int i = 0; i < filter_order; i++) {
-            _signal.add(0, 0);
+            _signal.add(0.0);
         }
 
         for (int i = filter_order;i<_signal.size();i++){
