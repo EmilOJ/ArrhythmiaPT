@@ -83,7 +83,7 @@ public class SignalProcessing extends AppCompatActivity {
 
     private void detect_and_classify() {
         List<Integer> qrsArray = new ArrayList<Integer>();
-        ArrayList<Double> segments = new ArrayList<Double>();
+        ArrayList<ArrayList<Double>> segments; // = new ArrayList<ArrayList<Double>>();
         List<Double> features = new ArrayList<Double>();
         int detected_qrs;
         int classification;
@@ -114,10 +114,10 @@ public class SignalProcessing extends AppCompatActivity {
                 features = get_features(segments, qrsArray);
 
                 // Classify with support vector machine
-                classification = classify_segments(segments, features);
+                /*classification = classify_segments(segments, features);*/
 
                 // Save classification and mSignal to database
-                save_classification(classification);
+                /*save_classification(classification);*/
 
                 // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
                 // but the mSignal must also be saved to a variable with continous ECG mSignal containing
@@ -171,7 +171,7 @@ public class SignalProcessing extends AppCompatActivity {
 
         //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
 
-        List<Double> qrs_loc = new ArrayList<Double>(Collections.nCopies(mSignal.size(), 0.0));
+        List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
 
         double[] h_thres_array = new double[mSignal.size()]; // TODO
         boolean first_candidate = true;
@@ -179,14 +179,14 @@ public class SignalProcessing extends AppCompatActivity {
 
         //Keeping track of maximum values in last 5 windows
         double[] window_max_buff = new double[5];
-        double window_max;
+        double window_max =0;
         int[] last_qrs = new int[5];
 
         //int candidate_detected;
         //int candidate_pos;
         //int candidate;
         int time_since_last_qrs;
-        int end_cand_search;
+        int end_cand_search =-1; // TODO: tjek om det passer!
 
         double rr_cur = 0;
         double rr_last = 0;
