@@ -30,10 +30,10 @@ public class SignalProcessing extends AppCompatActivity {
     static final String TAG = "SignalProcessing";
     static final int NUMBER_OF_FEATURES = 17;
     static final int FS = 360; // Sample rate in Hz
-    static final double SEGMENT_LENGTH = (200 / 1000) * FS; // ms (on each side of QRS complex) //burg math.floor
-    static final double REFRACTORY_PERIOD = (250 / 1000) * FS; // ms
+    static final int SEGMENT_LENGTH = (int) Math.floor((200 / 1000) * FS); // ms (on each side of QRS complex) //burg math.floor
+    static final int REFRACTORY_PERIOD = (int) Math.floor((250 / 1000) * FS); // ms
     // Instance variable containing ECG mSignal
-    public ArrayList<Double> mSignal = new ArrayList<Double>();
+    public List<Double> mSignal = new ArrayList<Double>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<ArrayList<Double>>();
     public List<Integer> mQrs;
     /**
@@ -148,13 +148,13 @@ public class SignalProcessing extends AppCompatActivity {
         //public void QRS_detection( double[] ecg, double[] b_low, double[] b_high,int b_avg, int delay) { //outputs: qrs, h_thres_array, ecg
 
         // Important Values
-        double window = 2 * FS; // 2 second window
+        int window = 2 * FS; // 2 second window
         double h_thresh = 0; // initial value of h_thresh
         double h_thresh_correct = 0.7; // correction value for h_thresh
 
         // Detecting candidate
         boolean candidate_detected = false;
-        double candidate_pos = 0;
+        int candidate_pos = 0;
         double candidate = 0;     // Candidate value
 
         //float[] lowPass;
@@ -165,7 +165,7 @@ public class SignalProcessing extends AppCompatActivity {
 
         //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
 
-        List<Double> qrs_loc = new ArrayList<Double>(Collections.nCopies(mSignal.size(), 0));
+        List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
         double[] h_thres_array = new double[mSignal.size()]; // TODO
         boolean first_candidate = true;
 
@@ -173,16 +173,17 @@ public class SignalProcessing extends AppCompatActivity {
         //Keeping track of maximum values in last 5 windows
         double[] window_max_buff = new double[5];
         double window_max;
-        double[] last_qrs = new double[5];
+        int[] last_qrs = new int[5];
 
         //int candidate_detected;
         //int candidate_pos;
         //int candidate;
         int time_since_last_qrs;
-        double end_cand_search;
+        int end_cand_search;
 
         double rr_cur = 0;
         double rr_last = 0;
+        int[] rr = new int[last_qrs.length-1];
 
         //// Filter Stage
         List<Double> b_low = new ArrayList<>(Arrays.asList(-0.00300068847555824, -0.0888956549729993, -0.00978073251699008, -0.00913537555132255, -0.00348493467952550, 0.00341086079804900, 0.0102865391156571, 0.0156935263250855, 0.0182699445494703, 0.0171711581672353, 0.0120921576301221, 0.00357779560317851, -0.00713041168615247, -0.0180134156879530, -0.0268696487375390, -0.0313147178636851, -0.0295416693658266, -0.0203155162205885, -0.00356416221151197, 0.0196106546763700, 0.0473078208714944, 0.0765698351683510, 0.104067354017840, 0.126566433194386, 0.141348431488521, 0.146497228887632, 0.141348431488521, 0.126566433194386, 0.104067354017840, 0.0765698351683510, 0.0473078208714944, 0.0196106546763700, -0.00356416221151197, -0.0203155162205885, -0.0295416693658266, -0.0313147178636851, -0.0268696487375390, -0.0180134156879530, -0.00713041168615247, 0.00357779560317851, 0.0120921576301221, 0.0171711581672353, 0.0182699445494703, 0.0156935263250855, 0.0102865391156571, 0.00341086079804900, -0.00348493467952550, -0.00913537555132255, -0.00978073251699008, -0.0888956549729993, -0.00300068847555824));
@@ -199,7 +200,7 @@ public class SignalProcessing extends AppCompatActivity {
         mSignal = mSignal - mean(mSignal);
 
         // Absolute
-        mSignal = Math.abs(mSignal, );
+        mSignal = Math.abs(mSignal);
 
         // Average
         mSignal = filter(mSignal,b_avg);
@@ -328,6 +329,20 @@ public class SignalProcessing extends AppCompatActivity {
     // Final function output
 
 
+    public int[] circshift(int[] last_qrs) {
+        for (int i = 0; i < last_qrs.length-1; i++) {
+            last_qrs[4-i] = last_qrs[3-i];
+        }
+        return last_qrs;
+    }
+
+    public int[] diff(int[] last_qrs) {
+        int[] rr = new int[4];
+        for (int i = 0; i < last_qrs.length-1; i++) {
+            rr[i] = last_qrs[i+1]-last_qrs[i];
+        }
+        return rr;
+    }
     // has to be sorted before - see MD app Fragment
     public static double median(double[] m) {
         int middle = m.length/2;
@@ -432,6 +447,7 @@ public class SignalProcessing extends AppCompatActivity {
       //  int total_segments_length = SEGMENT_LENGTH * 2 + 1;
         List<Double> segment;
         double pre_qrs, post_qrs, cur_qrs;
+
 
 
         // TODO: Convert to parallel computing? Iterations do not depend on each other.. except adding them to mSegments list.
