@@ -300,7 +300,7 @@ public class SignalProcessing extends AppCompatActivity {
                     candidate_pos = i;
                 }
 
-            } else if (time_since_last_qrs > rr_tolerance[2] && first_candidate == false) {
+            } else if (time_since_last_qrs > rr_tolerance[2] && !first_candidate) {
                 // Adjust threshold and search again.
                 h_thresh = 0.9 * h_thresh;
                 i = last_qrs[1] + REFRACTORY_PERIOD;
