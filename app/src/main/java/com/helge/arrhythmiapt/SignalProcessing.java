@@ -170,7 +170,7 @@ public class SignalProcessing {
 
         List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
 
-        double[] h_thres_array = new double[mSignal.size()]; // TODO
+        double[] h_thres_array = new double[mSignal.size()];
         boolean first_candidate = true;
 
 
@@ -210,18 +210,10 @@ public class SignalProcessing {
         mSignal = filter(mSignal,b_avg);
 
 
-        // Detection
-
-        // Shift entire signal to compensate for filter delay (specified by 'delay' variable)
-        //ecg=circshift(ecg,[0 -round(delay)]);
-        // TODO -- LAV OM TIL JAVA
-
-
-
-
+        /* Detection*/
         int i = 1;
         // Loop through entire signal
-        while (i < mSignal.size()); i++; {
+        while (i < mSignal.size(); i++) {
 
             // Check for new window max
             if (mSignal.get(i) > window_max) {
