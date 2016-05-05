@@ -28,4 +28,5 @@ dependencies {
     compile 'com.parse:parseui-login-android:0.0.1'
     compile 'com.parse:parseui-widget-android:0.0.1'
     compile 'de.sciss:jwave:1.0.3'
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }
