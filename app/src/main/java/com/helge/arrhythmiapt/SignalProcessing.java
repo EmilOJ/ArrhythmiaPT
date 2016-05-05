@@ -10,6 +10,7 @@ import android.widget.Toast;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.helge.arrhythmiapt.Models.SVMStruct;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import jwave.transforms.wavelets.biorthogonal.BiOrthogonal35;
 public class SignalProcessing extends AppCompatActivity {
 
     static final String TAG = "SignalProcessing";
+    final Context mContext;
     static final int NUMBER_OF_FEATURES = 17;
     static final int FS = 360; // Sample rate in Hz
     static final int SEGMENT_LENGTH = (int) Math.floor((200 / 1000) * FS); // ms (on each side of QRS complex) //burg math.floor
@@ -75,6 +77,9 @@ public class SignalProcessing extends AppCompatActivity {
         }
     }
 
+    public SignalProcessing(Context context) {
+        mContext = context;
+    }
 
     private void detect_and_classify() {
         List<Integer> qrsArray = new ArrayList<Integer>();
@@ -544,42 +549,12 @@ public class SignalProcessing extends AppCompatActivity {
 
         // Only use middle segment
         ArrayList<Double> segment = segments.get(1);
-
-
-
-        // TODO: Implement SVM classification
-
-
+        SVMStruct svmStruct = new SVMStruct(mContext);
 
         classification  = 0;
         return classification;
     }
 
-    private HashMap<String, double[]> loadSVMStruct() {
-        // TODO: Get trained SVM classifier weights (trained in MATLAB)
-        ArrayList<Double> svm = new ArrayList<Double>();
-        //The file is saved in the internal storage , and is found as such:
-        InputStream android = getResources().openRawResource(R.raw.svmAndroid);
-        //svmAndroid.model file exported from MATLAB when the right parameters have been saved.
-        //The file is read:
-        BufferedReader reader = new BufferedReader(new InputStreamReader(android));
-
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] RowData = line.split(" ");
-                svm.add(Double.parseDouble(RowData[2])); //insert the right rowData according to the svm from MATLAB
-            }
-        } catch (IOException ex) {
-        } finally {
-            try {
-                android.close();
-            } catch (IOException e) {
-            }
-        }
-
-        return parameters;
-    }
 
     private void save_classification(int classification) {
         // INPUT:
