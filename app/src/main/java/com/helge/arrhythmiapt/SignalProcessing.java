@@ -115,7 +115,7 @@ public class SignalProcessing {
                 /*save_classification(classification);*/
 
                 // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
-                // but the mSignal must also be saved to a variable with continous ECG mSignal containing
+                // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
                 // all three QRS complexes can be accessed. This is needed for RR interval computation.
 
                 // Empty mSignal variable
@@ -295,10 +295,10 @@ public class SignalProcessing {
                     candidate_pos = i;
                 }
 
-            } else if (time_since_last_qrs > rr_tolerance[2] && !first_candidate) {
+            } else if (time_since_last_qrs > rr_tolerance[1] && !first_candidate) {
                 // Adjust threshold and search again.
                 h_thresh = 0.9 * h_thresh;
-                i = last_qrs[1] + REFRACTORY_PERIOD;
+                i = last_qrs[0] + REFRACTORY_PERIOD;
 
                 candidate_detected = false;
                 candidate_pos = 0;
