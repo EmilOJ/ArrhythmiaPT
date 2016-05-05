@@ -16,6 +16,21 @@ import java.util.HashMap;
  */
 public class SVMStruct {
     Context mContext;
+    double[][] mSupportVectors;
+    double[] mAlpha;
+    double mBias;
+
+    public double[][] getSupportVectors() {
+        return mSupportVectors;
+    }
+
+    public double[] getAlpha() {
+        return mAlpha;
+    }
+
+    public double getBias() {
+        return mBias;
+    }
 
     public SVMStruct(Context context) {
         mContext = context;
