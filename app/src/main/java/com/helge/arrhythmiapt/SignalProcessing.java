@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
 
@@ -271,7 +272,7 @@ public class SignalProcessing extends AppCompatActivity {
                         //disp(rr_tolerance);
 
                         // Set new max in buffer
-                        window_max_buff = circshift(window_max_buff,[0 1]);
+                        window_max_buff = circshift(window_max_buff);
                         window_max_buff[1] = window_max;
                         // Update threshold as median of last 5 window_max
                         //(window_max_buff) weighted by threshold correction
@@ -534,6 +535,16 @@ public class SignalProcessing extends AppCompatActivity {
         List<Double> segment = segments.get(1);
 
 
+
+        // TODO: Implement SVM classification
+
+
+
+        classification  = 0;
+        return classification;
+    }
+
+    private HashMap<String, double[]> loadSVMStruct() {
         // TODO: Get trained SVM classifier weights (trained in MATLAB)
         ArrayList<Double> svm = new ArrayList<Double>();
         //The file is saved in the internal storage , and is found as such:
@@ -555,11 +566,8 @@ public class SignalProcessing extends AppCompatActivity {
             } catch (IOException e) {
             }
         }
-        // TODO: Implement SVM classification
-        classification = 0;
 
-
-        return classification;
+        return parameters;
     }
 
     private void save_classification(int classification) {
