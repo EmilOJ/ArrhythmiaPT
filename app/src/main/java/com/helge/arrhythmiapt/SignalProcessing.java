@@ -504,14 +504,14 @@ public class SignalProcessing {
             features[1] = (K / rr_intervals.get(1));
 
             // Feauture 3-17
-            // TODO: Implement wavelet transform from Jwave.
             double[] wavelet_coefficients = new double[segment.size()];
             Transform t = new Transform(new FastWaveletTransform(new BiOrthogonal35()));
             wavelet_coefficients = t.forward(segmentArray);
 
-
-            // TODO: Set features 3-17 to wavelet coefficients
-            //wavelet_coefficients[1];
+            // Set features 3-17 to wavelet coefficients
+            for (int i = 2; i < wavelet_coefficients.length; i++) {
+                features[i] = wavelet_coefficients[i-2];
+            }
         }
 
 
