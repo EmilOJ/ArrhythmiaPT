@@ -179,9 +179,6 @@ public class SignalProcessing {
         double window_max =0;
         int[] last_qrs = new int[5];
 
-        //int candidate_detected;
-        //int candidate_pos;
-        //int candidate;
         int time_since_last_qrs;
         int end_cand_search =-1; // TODO: tjek om det passer!
 
@@ -213,7 +210,7 @@ public class SignalProcessing {
         /* Detection*/
         int i = 1;
         // Loop through entire signal
-        while (i < mSignal.size(); i++) {
+        while (i < mSignal.size()) {
 
             // Check for new window max
             if (mSignal.get(i) > window_max) {
@@ -226,7 +223,7 @@ public class SignalProcessing {
             // (If not, don't check for new QRS)
             time_since_last_qrs =  i - last_qrs[1];
 
-            if (time_since_last_qrs > REFRACTORY_PERIOD || first_candidate) {
+            if ((time_since_last_qrs > REFRACTORY_PERIOD) || first_candidate) {
                 // Check if a candidate QRS was detected
                 if (candidate_detected == true) {
                     // if end of candidate search was reached
@@ -323,9 +320,8 @@ public class SignalProcessing {
             }
             h_thres_array[i] = h_thresh;
             i = i + 1;
-            return qrs_loc;
         }
-
+        return qrs_loc;
 
         //TODO: if qrs_loc contains no ones - return empty list
     }
