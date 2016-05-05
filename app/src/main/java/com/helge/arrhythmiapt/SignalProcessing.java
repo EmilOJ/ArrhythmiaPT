@@ -555,31 +555,6 @@ public class SignalProcessing extends AppCompatActivity {
         return classification;
     }
 
-    private HashMap<String, double[]> loadSVMStruct() {
-        // TODO: Get trained SVM classifier weights (trained in MATLAB)
-        ArrayList<Double> svm = new ArrayList<Double>();
-        //The file is saved in the internal storage , and is found as such:
-        InputStream android = getResources().openRawResource(R.raw.svmAndroid);
-        //svmAndroid.model file exported from MATLAB when the right parameters have been saved.
-        //The file is read:
-        BufferedReader reader = new BufferedReader(new InputStreamReader(android));
-
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] RowData = line.split(" ");
-                svm.add(Double.parseDouble(RowData[2])); //insert the right rowData according to the svm from MATLAB
-            }
-        } catch (IOException ex) {
-        } finally {
-            try {
-                android.close();
-            } catch (IOException e) {
-            }
-        }
-
-        return parameters;
-    }
 
     private void save_classification(int classification) {
         // INPUT:
