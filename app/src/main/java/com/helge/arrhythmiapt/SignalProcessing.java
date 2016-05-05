@@ -77,7 +77,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
     private void detect_and_classify() {
-        List<Double> qrsArray = new ArrayList<Double>();
+        List<Integer> qrsArray = new ArrayList<Integer>();
         List<ArrayList<Double>> segments = new ArrayList<ArrayList<Double>>();
         List<Double> features = new ArrayList<Double>();
         int detected_qrs;
@@ -88,7 +88,7 @@ public class SignalProcessing extends AppCompatActivity {
         if (mSignal.size() > REFRACTORY_PERIOD) {
 
             // Location (array index) of detected QRS. 0 if no QRS detected.
-            List<Double> qrs_detected = detect_qrs();
+            List<Integer> qrs_detected = detect_qrs();
 
             if (qrs_detected.size() != 0) {
                 // Add detected QRS location to previous ones (need 3 for classification)
@@ -166,11 +166,8 @@ public class SignalProcessing extends AppCompatActivity {
 
         //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
 
-<<<<<<< Updated upstream
-        List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
-=======
         List<Double> qrs_loc = new ArrayList<Double>(Collections.nCopies(mSignal.size(), 0.0));
->>>>>>> Stashed changes
+
         double[] h_thres_array = new double[mSignal.size()]; // TODO
         boolean first_candidate = true;
 
@@ -259,7 +256,7 @@ public class SignalProcessing extends AppCompatActivity {
                             qrs_loc.set(candidate_pos,1);
 
                             // Save last 5 detected qrs
-                            last_qrs = circshift(last_qrs);
+                            last_qrs = circshift(last_qrs,1);
                             last_qrs[1] = candidate_pos;
 
                             // Save RR-interval of last 5 qrs and use it to
@@ -369,7 +366,7 @@ public class SignalProcessing extends AppCompatActivity {
         return sum / m.length;
     }
 
-    public static double circshift(double[] array, int shift){
+    public static int circshift(int[] array, int shift){
         int temp = array[array.length]);
         for (int i = 0; i < array-length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
@@ -450,7 +447,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-    private ArrayList<ArrayList<Double>> segments_around_qrs(List<Double> qrsArray) {
+    private ArrayList<ArrayList<Double>> segments_around_qrs(List<Integer> qrsArray) {
         // INPUT:
         //      - mQrs:      location in sample number of the detected mQrs complex
         //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
