@@ -366,7 +366,7 @@ public class SignalProcessing extends AppCompatActivity {
         return sum / m.length;
     }
 
-    public static int circshift(int[] array, int shift){
+    public int circshift(int[] array, int shift){
         int temp = array[array.length]);
         for (int i = 0; i < array.length-shift;i++){
             array[array.length-i] = array[array.length-i-1];
@@ -481,7 +481,7 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-    private ArrayList<Double> get_features(List<ArrayList<Double>> segments, List<Integer> qrs) {
+    private ArrayList<Double> get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -534,7 +534,7 @@ public class SignalProcessing extends AppCompatActivity {
         return rr_intervals;
     }
 
-    private int classify_segments(ArrayList<Double> segments, List<Double> features) {
+    private int classify_segments(ArrayList<ArrayList<Double>> segments, ArrayList<Double> features) {
         // INPUT:
         //      - segments:
         //      - features:
