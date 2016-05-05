@@ -143,7 +143,7 @@ public class SignalProcessing {
 // --- ecg - ECG signal for QRS detection
 // --- b_low - FIR low pass b filtering coefficients
 // --- b_high - FIR high pass b filtering coefficients
-// --- b_avg - averageing filter coefficients
+// --- b_avg - averaging filter coefficients
 // --- delay - delay caused by filters (check with grpdelay function)
 
         //public void QRS_detection( double[] ecg, double[] b_low, double[] b_high,int b_avg, int delay) { //outputs: qrs, h_thres_array, ecg
@@ -483,8 +483,7 @@ public class SignalProcessing {
             List<Double> segment = segments.get(1);
             double[] segmentArray = asArray(segments.get(iSegment));
 
-            double K = 267; //Estimate since in Song (2005) they have a fs = 360 and K=300
-            //We have a fs = 320, 40/360 = 0.111, 0.111*300 is 33.33, 300-33.33 = 266.66
+            double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1
             features[0] = (K / rr_intervals.get(0));
