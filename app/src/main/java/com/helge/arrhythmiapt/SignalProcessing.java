@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
 
@@ -39,6 +38,7 @@ public class SignalProcessing extends AppCompatActivity {
     public List<Double> mSignal = new ArrayList<Double>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<ArrayList<Double>>();
     public List<Integer> mQrs;
+    private static SVMStruct mSVMStruct;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -79,6 +79,8 @@ public class SignalProcessing extends AppCompatActivity {
 
     public SignalProcessing(Context context) {
         mContext = context;
+        mSVMStruct = new SVMStruct(mContext);
+
     }
 
     private void detect_and_classify() {
@@ -540,7 +542,7 @@ public class SignalProcessing extends AppCompatActivity {
         return rr_intervals;
     }
 
-    private int classify_segments(ArrayList<ArrayList<Double>> segments, ArrayList<Double> features) {
+    private int classify_segments(ArrayList<ArrayList<Double>> segments, double[] features) {
         // INPUT:
         //      - segments:
         //      - features:
@@ -548,12 +550,46 @@ public class SignalProcessing extends AppCompatActivity {
         //      - segments:  The three segments consisting of ±200 ms around each QRS complex
         int classification;
 
-        // Only use middle segment
-        ArrayList<Double> segment = segments.get(1);
-        SVMStruct svmStruct = new SVMStruct(mContext);
 
-        classification  = 0;
+        int c = 0;
+        double bias = mSVMStruct.getBias();
+        double[] alpha = mSVMStruct.getAlpha();
+        double[][] vectors = mSVMStruct.getSupportVectors();
+        for (int i = 0; i < mSVMStruct.getNumberOfVectors(); i++) {
+            c += alpha[i] * innerProduct(vectors[i], features) + bias;
+        }
+
+        if (c >= 0) {
+            classification = 1;
+        } else {
+            classification = -1;
+        }
+
         return classification;
+    }
+
+    private double[] innerProduct(double[][] a, double[] b) {
+        double[] product = new double[a.length];
+        int sum;
+        for (int row = 0; row < a.length - 1; row++) {
+            sum = 0;
+            for (int col = 0; col < b.length - 1; col++) {
+                sum += a[row][col] * b[col];
+            }
+            product[row] = sum;
+        }
+
+        return product;
+    }
+
+    private double innerProduct(double[] a, double[] b) {
+
+        double product = 0;
+        for (int i = 0; i < a.length - 1; i++) {
+            product += a[i] * b[i];
+        }
+
+        return product;
     }
 
 

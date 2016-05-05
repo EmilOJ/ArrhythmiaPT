@@ -18,6 +18,10 @@ public class SVMStruct {
     double[] mAlpha;
     double mBias;
 
+    public int getNumberOfVectors() {
+        return getSupportVectors()[0].length;
+    }
+
     public double[][] getSupportVectors() {
         return mSupportVectors;
     }
