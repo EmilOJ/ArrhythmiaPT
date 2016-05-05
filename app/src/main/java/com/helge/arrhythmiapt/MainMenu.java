@@ -8,6 +8,8 @@ import android.widget.Button;
 
 import com.helge.arrhythmiapt.Notes.NotesListActivity;
 
+import java.io.IOException;
+
 public class MainMenu extends AppCompatActivity {
     private static Button notesButton;
 
@@ -27,5 +29,11 @@ public class MainMenu extends AppCompatActivity {
         });
 
         SignalProcessing signalProcessing = new SignalProcessing(this);
+        try {
+            signalProcessing.readECG();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        signalProcessing.detect_and_classify();
     }
 }

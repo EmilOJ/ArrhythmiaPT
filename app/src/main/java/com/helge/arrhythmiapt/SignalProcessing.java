@@ -39,8 +39,8 @@ public class SignalProcessing {
      */
     private GoogleApiClient client;
 
-    //@Override
-    public void ReadECG() throws IOException {
+
+    public void readECG() throws IOException {
 
         //The file is saved in the internal storage , and is found as such:
         InputStream is = mContext.getResources().openRawResource(R.raw.samples);
@@ -180,7 +180,7 @@ public class SignalProcessing {
         int[] last_qrs = new int[5];
 
         int time_since_last_qrs;
-        int end_cand_search =-1; // TODO: tjek om det passer!
+        int end_cand_search = -1;
 
         double rr_cur = 0;
         double rr_last = 0;
@@ -208,7 +208,7 @@ public class SignalProcessing {
 
 
         /* Detection*/
-        int i = 1;
+        int i = 0;
         // Loop through entire signal
         while (i < mSignal.size()) {
 
@@ -221,15 +221,15 @@ public class SignalProcessing {
 
             // Check if refractory period is over
             // (If not, don't check for new QRS)
-            time_since_last_qrs =  i - last_qrs[1];
+            time_since_last_qrs =  i - last_qrs[0];
 
             if ((time_since_last_qrs > REFRACTORY_PERIOD) || first_candidate) {
                 // Check if a candidate QRS was detected
-                if (candidate_detected == true) {
+                if (candidate_detected) {
                     // if end of candidate search was reached
                     if (i == end_cand_search) {
 
-                        if (time_since_last_qrs < rr_tolerance[1] && !first_candidate) {
+                        if (time_since_last_qrs < rr_tolerance[0] && !first_candidate) {
                             // Adjust threshold and search again.
                             h_thresh = 1.1 * h_thresh;
                             i = last_qrs[0] + REFRACTORY_PERIOD;
@@ -244,10 +244,10 @@ public class SignalProcessing {
 
                             // Save candidate as new detected QRS peak.
                             //qrs_loc[candidate_pos] = 1;
-                            qrs_loc.set(candidate_pos,1);
+                            qrs_loc.set(candidate_pos, 1);
 
                             // Save last 5 detected qrs
-                            last_qrs = circshift(last_qrs,1);
+                            last_qrs = circshift(last_qrs, 1);
                             last_qrs[0] = candidate_pos;
 
                             // Save RR-interval of last 5 qrs and use it to
@@ -259,63 +259,62 @@ public class SignalProcessing {
                             rr = abs(rr);
 
                             rr_last = mean(rr); // neglect zero
-                            if (rr_cur < rr_tolerance_phys[1] || rr_cur > rr_tolerance_phys[2]) {
+                            if (rr_cur < rr_tolerance_phys[0] || rr_cur > rr_tolerance_phys[1]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance[0] = rr_last * 0.5;
-                                rr_tolerance[1] = rr_last * 1.6;
+                                rr_tolerance[0] = rr_last * 0.3;
+                                rr_tolerance[1] = rr_last * 1.9;
+                            }
+
+                            // Set new max in buffer
+                            window_max_buff = circshift(window_max_buff, 1);
+                            window_max_buff[0] = window_max;
+                            // Update threshold as median of last 5 window_max
+                            //(window_max_buff) weighted by threshold correction
+                            // factor (thresh_correct)
+                            h_thresh = h_thresh_correct * median(neglectZeros(window_max_buff));
+                            ;
+                            // Reset window_max
+                            window_max = 0;
+
+
+                            // Reset candidate variables
+                            candidate_detected = false;
+                            candidate_pos = 0;
+                            candidate = 0;
+
+                            if (first_candidate) {
+                                first_candidate = false;
                             }
                         }
-
-                        //disp(rr_tolerance);
-
-                        // Set new max in buffer
-                        window_max_buff = circshift(window_max_buff, 1);
-                        window_max_buff[0] = window_max;
-                        // Update threshold as median of last 5 window_max
-                        //(window_max_buff) weighted by threshold correction
-                        // factor (thresh_correct)
-                        h_thresh = h_thresh_correct * median(neglectZeros_double(window_max_buff));
-                        ;
-                        // Reset window_max
-                        window_max = 0;
-
-
-                        // Reset candidate variables
-                        candidate_detected = false;
-                        candidate_pos = 0;
-                        candidate = 0;
-
-                        if (first_candidate == true) {
-                            first_candidate = false;
-                        }
+                    } else if (mSignal.get(i) > candidate) {
+                        candidate = mSignal.get(i);
+                        candidate_pos = i;
                     }
-                } else if (mSignal.get(i) > candidate) {
-                    candidate = mSignal.get(i);
-                    candidate_pos = i;
-                }
 
-            } else if (time_since_last_qrs > rr_tolerance[1] && !first_candidate) {
-                // Adjust threshold and search again.
-                h_thresh = 0.9 * h_thresh;
-                i = last_qrs[0] + REFRACTORY_PERIOD;
 
-                candidate_detected = false;
-                candidate_pos = 0;
-                candidate = 0;
+                } else if (time_since_last_qrs > rr_tolerance[1] && !first_candidate) {
+                    // Adjust threshold and search again.
+                    h_thresh = 0.9 * h_thresh;
+                    i = last_qrs[0] + REFRACTORY_PERIOD;
 
-                window_max = 0;
-            } else {
-                // Check if high threshold is surpassed
-                if (mSignal.get(i) > h_thresh) {
-                    // Make this position the first candidate value
-                    //candidate = mSignal[i];
-                    candidate = mSignal.get(i);
-                    candidate_pos = i;
-                    candidate_detected = true;
-                    // Set candidate search to refractory period from
-                    // current candidate.
-                    end_cand_search = i + REFRACTORY_PERIOD;
+                    candidate_detected = false;
+                    candidate_pos = 0;
+                    candidate = 0;
+
+                    window_max = 0;
+                } else {
+                    // Check if high threshold is surpassed
+                    if (mSignal.get(i) > h_thresh) {
+                        // Make this position the first candidate value
+                        //candidate = mSignal[i];
+                        candidate = mSignal.get(i);
+                        candidate_pos = i;
+                        candidate_detected = true;
+                        // Set candidate search to refractory period from
+                        // current candidate.
+                        end_cand_search = i + REFRACTORY_PERIOD;
+                    }
                 }
             }
             h_thres_array[i] = h_thresh;
@@ -353,7 +352,7 @@ public class SignalProcessing {
         return newArray;
     }
 
-    public double[] neglectZeros_double(double[] array) {
+    public double[] neglectZeros(double[] array) {
         int j = 0;
         for (int k = 0; k < array.length; k++) {
             if (array[k] != 0)
@@ -417,18 +416,18 @@ public class SignalProcessing {
     }
 
     public int[] circshift(int[] array, int shift){
-        int temp = array[array.length];
-        for (int i = 0; i < array.length-shift;i++){
-            array[array.length-i] = array[array.length-i-1];
+        int temp = array[array.length-1];
+        for (int i = 0; i < array.length-shift-1;i++){
+            array[array.length-1-i] = array[array.length-i-2];
         }
         array[0] = temp;
         return array;
     }
 
     public double[] circshift(double[] array, int shift){
-        double temp = array[array.length];
-        for (int i = 0; i < array.length-shift;i++){
-            array[array.length-i] = array[array.length-i-1];
+        double temp = array[array.length-1];
+        for (int i = 0; i < array.length-shift-1;i++){
+            array[array.length-1-i] = array[array.length-i-2];
         }
         array[0] = temp;
         return array;
