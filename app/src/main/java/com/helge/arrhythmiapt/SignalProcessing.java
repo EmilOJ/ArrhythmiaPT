@@ -78,7 +78,7 @@ public class SignalProcessing extends AppCompatActivity {
 
     private void detect_and_classify() {
         List<Integer> qrsArray = new ArrayList<Integer>();
-        List<ArrayList<Double>> segments = new ArrayList<ArrayList<Double>>();
+        ArrayList<Double> segments = new ArrayList<Double>();
         List<Double> features = new ArrayList<Double>();
         int detected_qrs;
         int classification;
@@ -241,7 +241,7 @@ public class SignalProcessing extends AppCompatActivity {
                         if (time_since_last_qrs < rr_tolerance[1] && !first_candidate) {
                             // Adjust threshold and search again.
                             h_thresh = 1.1 * h_thresh;
-                            i = last_qrs[1] + REFRACTORY_PERIOD;
+                            i = last_qrs[0] + REFRACTORY_PERIOD;
 
                             candidate_detected = false;
                             candidate_pos = 0;
@@ -249,7 +249,7 @@ public class SignalProcessing extends AppCompatActivity {
 
                             window_max = 0;
                         } else {
-                            rr_cur = Math.abs((last_qrs[1]) - candidate_pos);
+                            rr_cur = Math.abs((last_qrs[0]) - candidate_pos);
 
                             // Save candidate as new detected QRS peak.
                             //qrs_loc[candidate_pos] = 1;
@@ -257,7 +257,7 @@ public class SignalProcessing extends AppCompatActivity {
 
                             // Save last 5 detected qrs
                             last_qrs = circshift(last_qrs,1);
-                            last_qrs[1] = candidate_pos;
+                            last_qrs[0] = candidate_pos;
 
                             // Save RR-interval of last 5 qrs and use it to
                             // define search window
