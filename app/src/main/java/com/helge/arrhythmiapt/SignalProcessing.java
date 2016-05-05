@@ -43,7 +43,7 @@ public class SignalProcessing {
     public void ReadECG(Context context) throws IOException {
 
         //The file is saved in the internal storage , and is found as such:
-        InputStream is = getResources().openRawResource(R.raw.samples);
+        InputStream is = context.getResources().openRawResource(R.raw.samples);
         //The file is read:
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
