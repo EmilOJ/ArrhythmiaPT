@@ -40,10 +40,10 @@ public class SignalProcessing {
     private GoogleApiClient client;
 
     //@Override
-    public void ReadECG(Context context) throws IOException {
+    public void ReadECG() throws IOException {
 
         //The file is saved in the internal storage , and is found as such:
-        InputStream is = getResources().openRawResource(R.raw.samples);
+        InputStream is = mContext.getResources().openRawResource(R.raw.samples);
         //The file is read:
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
@@ -59,13 +59,13 @@ public class SignalProcessing {
                 }
             }
         } catch (IOException ex) {
-            Toast toast = Toast.makeText(getApplicationContext(), "ERROR: File not read", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(mContext, "ERROR: File not read", Toast.LENGTH_SHORT);
             toast.show();
         } finally {
             try {
                 is.close();
             } catch (IOException e) {
-                Toast toast = Toast.makeText(getApplicationContext(), "ERROR: File not closed", Toast.LENGTH_SHORT);
+                Toast toast = Toast.makeText(mContext, "ERROR: File not closed", Toast.LENGTH_SHORT);
                 toast.show();
             }
         }
