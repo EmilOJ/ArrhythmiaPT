@@ -1,15 +1,13 @@
 package com.helge.arrhythmiapt.Models;
 
 import android.content.Context;
-
 import com.helge.arrhythmiapt.R;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 
 /**
  * Created by ThereseSchoenemann on 05-05-2016.
@@ -37,23 +35,35 @@ public class SVMStruct {
     }
         public void loadSVMStruct () throws IOException{
             // TODO: Get trained SVM classifier weights (trained in MATLAB)
-            ArrayList<Double> svm = new ArrayList<Double>();
             //The file is saved in the internal storage , and is found as such:
-            InputStream android = mContext.getResources().openRawResource(R.raw.supportvectors);
-            //svmAndroid.model file exported from MATLAB when the right parameters have been saved.
+            InputStream modelSupportVectors = mContext.getResources().openRawResource(R.raw.supportvectors);
+            InputStream alpha = mContext.getResources().openRawResource(R.raw.alpha);
+            InputStream bias = mContext.getResources().openRawResource(R.raw.bias);
             //The file is read:
-            BufferedReader reader = new BufferedReader(new InputStreamReader(android));
-
+            BufferedReader readerSV = new BufferedReader(new InputStreamReader(modelSupportVectors));
+            BufferedReader readerAlpha = new BufferedReader(new InputStreamReader(alpha));
+            BufferedReader readerBias = new BufferedReader(new InputStreamReader(bias));
             try {
                 String line;
-                while ((line = reader.readLine()) != null) {
+                int row = 0;
+                while ((line = readerSV.readLine()) != null) {
                     String[] RowData = line.split("\t");
-                    svm.add(Double.parseDouble(RowData[1])); //insert the right rowData according to the svm from MATLAB
+                    for (int i = 0; i<=RowData.length-1;  i++){
+                        mSupportVectors[row][i]= Double.parseDouble(RowData[i]);
+                    }
+                }
+                while ((line = readerAlpha.readLine()) != null) {
+                    String[] DataAlpha = line.split("\t");
+                    mAlpha[1] = Double.parseDouble(DataAlpha[1]);
+                }
+                while((line = readerBias.readLine()) != null){
+                    String[] DataBias = line.split("\t");
+                    mBias= Double.parseDouble(DataBias[1]);
                 }
             } catch (IOException ex) {
             } finally {
                 try {
-                    android.close();
+                    modelSupportVectors.close();
                 } catch (IOException e) {
                 }
             }
