@@ -467,7 +467,8 @@ public class SignalProcessing extends AppCompatActivity {
 
 
 
-        // TODO: Convert to parallel computing? Iterations do not depend on each other.. except adding them to mSegments list.
+        // TODO: Convert to parallel computing? Iterations do not depend on each other..
+        // except adding them to mSegments list.
         // Loop through all mQrs (except first and last)
 
         for (int j = 0; j < 3; j++) {
@@ -491,7 +492,7 @@ public class SignalProcessing extends AppCompatActivity {
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
         //      - mSignal:  Segmented mSignal from segments_around_qrs()
-        // OUPUT:
+        // OUTPUT:
         //      - features: Computed feature vector
 
 
@@ -511,8 +512,8 @@ public class SignalProcessing extends AppCompatActivity {
             // Feature 2
             features.add(K / rr_intervals.get(1));
 
-            // Feauture 3-17
-            // TODO: Implement wavelet transform from Jwave.
+            // Feature 3-17
+            // Implement wavelet transform from Jwave.
             double[] wavelet_coefficients = new double[segment.size()];
             Transform t = new Transform(new FastWaveletTransform(new BiOrthogonal35()));
             wavelet_coefficients = t.forward(segmentArray);
@@ -528,8 +529,8 @@ public class SignalProcessing extends AppCompatActivity {
 
     private List<Integer> compute_RR(List<Integer> qrs) {
         // INPUT:
-        //      - qrs:  Segmentsed signal from segments_around_qrs()
-        // OUPUT:
+        //      - qrs:  Segmented signal from segments_around_qrs()
+        // OUTPUT:
         //      - rr_intervals: Computed feature vector
         List<Integer> rr_intervals = new ArrayList<Integer>();
 
