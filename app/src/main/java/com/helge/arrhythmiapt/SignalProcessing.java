@@ -40,10 +40,10 @@ public class SignalProcessing {
     private GoogleApiClient client;
 
     //@Override
-    public void ReadECG(Context context) throws IOException {
+    public void ReadECG() throws IOException {
 
         //The file is saved in the internal storage , and is found as such:
-        InputStream is = getResources().openRawResource(R.raw.samples);
+        InputStream is = mContext.getResources().openRawResource(R.raw.samples);
         //The file is read:
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
@@ -59,13 +59,13 @@ public class SignalProcessing {
                 }
             }
         } catch (IOException ex) {
-            Toast toast = Toast.makeText(getApplicationContext(), "ERROR: File not read", Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(mContext, "ERROR: File not read", Toast.LENGTH_SHORT);
             toast.show();
         } finally {
             try {
                 is.close();
             } catch (IOException e) {
-                Toast toast = Toast.makeText(getApplicationContext(), "ERROR: File not closed", Toast.LENGTH_SHORT);
+                Toast toast = Toast.makeText(mContext, "ERROR: File not closed", Toast.LENGTH_SHORT);
                 toast.show();
             }
         }
@@ -170,7 +170,7 @@ public class SignalProcessing {
 
         List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
 
-        double[] h_thres_array = new double[mSignal.size()]; // TODO
+        double[] h_thres_array = new double[mSignal.size()];
         boolean first_candidate = true;
 
 
@@ -210,18 +210,10 @@ public class SignalProcessing {
         mSignal = filter(mSignal,b_avg);
 
 
-        // Detection
-
-        // Shift entire signal to compensate for filter delay (specified by 'delay' variable)
-        //ecg=circshift(ecg,[0 -round(delay)]);
-        // TODO -- LAV OM TIL JAVA
-
-
-
-
+        /* Detection*/
         int i = 1;
         // Loop through entire signal
-        while (i < mSignal.size()); i++; {
+        while (i < mSignal.size(); i++) {
 
             // Check for new window max
             if (mSignal.get(i) > window_max) {
@@ -458,10 +450,6 @@ public class SignalProcessing {
         int pre_qrs, post_qrs, cur_qrs;
 
 
-
-        // TODO: Convert to parallel computing? Iterations do not depend on each other.. except adding them to mSegments list.
-        // Loop through all mQrs (except first and last)
-
         for (int j = 0; j < 3; j++) {
             // Find sample index for segment
             cur_qrs = qrsArray.get(j);
@@ -483,7 +471,7 @@ public class SignalProcessing {
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
         //      - mSignal:  Segmented mSignal from segments_around_qrs()
-        // OUPUT:
+        // OUTPUT:
         //      - features: Computed feature vector
 
 
@@ -503,15 +491,15 @@ public class SignalProcessing {
             // Feature 2
             features[1] = (K / rr_intervals.get(1));
 
-            // Feauture 3-17
+            // Feature 3-17
+            // Implement wavelet transform from Jwave.
             double[] wavelet_coefficients = new double[segment.size()];
             Transform t = new Transform(new FastWaveletTransform(new BiOrthogonal35()));
             wavelet_coefficients = t.forward(segmentArray);
 
-            // Set features 3-17 to wavelet coefficients
-            for (int i = 2; i < wavelet_coefficients.length; i++) {
-                features[i] = wavelet_coefficients[i-2];
-            }
+
+            // TODO: Set features 3-17 to wavelet coefficients
+            //wavelet_coefficients[1];
         }
 
 
@@ -520,8 +508,8 @@ public class SignalProcessing {
 
     private List<Integer> compute_RR(List<Integer> qrs) {
         // INPUT:
-        //      - qrs:  Segmentsed signal from segments_around_qrs()
-        // OUPUT:
+        //      - qrs:  Segmented signal from segments_around_qrs()
+        // OUTPUT:
         //      - rr_intervals: Computed feature vector
         List<Integer> rr_intervals = new ArrayList<Integer>();
 
