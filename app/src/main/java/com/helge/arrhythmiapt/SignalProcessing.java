@@ -456,11 +456,6 @@ public class SignalProcessing {
         int pre_qrs, post_qrs, cur_qrs;
 
 
-
-        // TODO: Convert to parallel computing? Iterations do not depend on each other..
-        // except adding them to mSegments list.
-        // Loop through all mQrs (except first and last)
-
         for (int j = 0; j < 3; j++) {
             // Find sample index for segment
             cur_qrs = qrsArray.get(j);
