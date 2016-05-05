@@ -178,7 +178,7 @@ public class SignalProcessing extends AppCompatActivity {
         //int candidate_detected;
         //int candidate_pos;
         //int candidate;
-        int time_since_last_qrs;
+        double time_since_last_qrs;
         double end_cand_search;
 
         double rr_cur = 0;
@@ -199,7 +199,7 @@ public class SignalProcessing extends AppCompatActivity {
         mSignal = mSignal - mean(mSignal);
 
         // Absolute
-        mSignal = Math.abs(mSignal, );
+        mSignal = Math.abs(mSignal);
 
         // Average
         mSignal = filter(mSignal,b_avg);
@@ -328,6 +328,12 @@ public class SignalProcessing extends AppCompatActivity {
     // Final function output
 
 
+    public List<Double> diff(List<Double> last_qrs) {
+        for (int i = 0; i < last_qrs.size()-1; i++) {
+            last_qrs.set(4-i,last_qrs.get(3-i));
+        }
+        return last_qrs;
+    }
     // has to be sorted before - see MD app Fragment
     public static double median(double[] m) {
         int middle = m.length/2;
@@ -432,6 +438,7 @@ public class SignalProcessing extends AppCompatActivity {
       //  int total_segments_length = SEGMENT_LENGTH * 2 + 1;
         List<Double> segment;
         double pre_qrs, post_qrs, cur_qrs;
+
 
 
         // TODO: Convert to parallel computing? Iterations do not depend on each other.. except adding them to mSegments list.
