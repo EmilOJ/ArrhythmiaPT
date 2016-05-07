@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.helge.arrhythmiapt.Models.Arrhythmia;
 import com.helge.arrhythmiapt.Models.SVMStruct;
 
 import java.io.BufferedReader;
@@ -120,7 +121,7 @@ public class SignalProcessing {
         ArrayList<ArrayList<Double>> segments;
         double[] features = new double[NUMBER_OF_FEATURES];
         int detected_qrs;
-        int classification;
+        List<String> classification;
 
         qrs_detected = detect_qrs();
 
@@ -134,10 +135,10 @@ public class SignalProcessing {
         features = get_features(segments, qrs_detected);
 
         // Classify with support vector machine
-        /*classification = classify_segments(segments, features);*/
+        classification = classify_segments(segments, features);
 
         // Save classification and mSignal to database
-        /*save_classification(classification);*/
+        save_classification(classification, qrs_detected);
 
         // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
         // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
@@ -563,7 +564,7 @@ public class SignalProcessing {
         return rr_intervals;
     }
 
-    private int classify_segments(ArrayList<ArrayList<Double>> segments, double[] features) {
+    private List<String> classify_segments(ArrayList<ArrayList<Double>> segments, double[] features) {
         // INPUT:
         //      - segments:
         //      - features:
@@ -600,10 +601,12 @@ public class SignalProcessing {
     }
 
 
-    private void save_classification(int classification) {
+    private void save_classification(List<String> classification, List<Integer> qrs) {
         // INPUT:
         //      - classification:    from classify_segments()
+        //      - qrs:               detected qrs locations
         // Saves classification to database
+        extractArrhythmias(classification, qrs);
 
         // TODO: Save classification to database
         // TODO: Save signal segments to database or maybe just QRS locations?
@@ -620,7 +623,7 @@ public class SignalProcessing {
         return doubleArray;
     }
 
-    public void filter_signal() {
+    private void filter_signal() {
         List<Double> a = new ArrayList<>();
         a.add(1.0);
         a.add(-0.97);
@@ -631,5 +634,23 @@ public class SignalProcessing {
 
         mSignal = filter(mSignal, b, a);
     }
+
+    private void computeArrhythmiaTimes(int arrythmia_index, List<Integer> qrs) {
+
+    }
+
+    private void extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs) {
+        List<Arrhythmia> arrhythmias = new ArrayList<>();
+
+        for (int i = 0; i < detected_arrhythmias.size(); i++) {
+            String arrhythmia = detected_arrhythmias.get(i);
+            if (!arrhythmia.equals("N")) {
+                computeArrhythmiaTimes(i, qrs);
+            }
+        }
+    }
+
+
+
 
 }
