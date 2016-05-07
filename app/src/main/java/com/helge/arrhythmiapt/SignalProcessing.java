@@ -28,7 +28,7 @@ public class SignalProcessing {
     static final int REFRACTORY_PERIOD = (int) Math.floor((250.0 / 1000) * FS);
     private static SVMStruct mSVMStruct;
     final Context mContext;
-    public List<Double> mSignal = new ArrayList<Double>();
+    public List<Double> mSignal = new ArrayList<>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<>();
     public List<Integer> mQrs;
 
@@ -123,6 +123,9 @@ public class SignalProcessing {
         int classification;
 
         qrs_detected = detect_qrs();
+
+        // High-pass filter signal
+        filter_signal();
 
         // Extract ±200 ms mSegments around QRS. This is used for classification.
         segments = segments_around_qrs(qrs_detected);
@@ -413,9 +416,6 @@ public class SignalProcessing {
     }
 
     public List<Double> circshift(List<Double> array, int shift){
-        //double[] temp = Arrays.copyOfRange(array, array.size()-shift, array.size()-1);
-        //List<Double> temp = array.subList(0,shift);
-
         double[] temp = new double[shift];
         for (int i = 0; i < shift; i ++) {
             double value = array.get(i);
@@ -427,8 +427,6 @@ public class SignalProcessing {
         for (int i = 0; i < temp.length; i++) {
             array.add(temp[i]);
         }
-
-
 
         return array;
     }
@@ -620,6 +618,18 @@ public class SignalProcessing {
             doubleArray[i] = arrayList.get(i);
         }
         return doubleArray;
+    }
+
+    public void filter_signal() {
+        List<Double> a = new ArrayList<>();
+        a.add(1.0);
+        a.add(-0.97);
+
+        List<Double> b = new ArrayList<>();
+        b.add(1.0);
+        b.add(-1.0);
+
+        mSignal = filter(mSignal, b, a);
     }
 
 }
