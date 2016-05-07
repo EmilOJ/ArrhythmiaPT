@@ -121,15 +121,16 @@ public class SignalProcessing {
         ArrayList<ArrayList<Double>> segments;
         double[] features = new double[NUMBER_OF_FEATURES];
         int detected_qrs;
+        List<Integer> qrs_loc;
         List<String> classification;
 
         qrs_detected = detect_qrs();
-
+        qrs_loc = getQrsLoc(qrs_detected);
         // High-pass filter signal
         filter_signal();
 
         // Extract ±200 ms mSegments around QRS. This is used for classification.
-        segments = segments_around_qrs(qrs_detected);
+        segments = segments_around_qrs(qrs_loc);
 
         // Compute features
         features = get_features(segments, qrs_detected);
@@ -511,7 +512,7 @@ public class SignalProcessing {
 
 
 //
-    private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs) {
+private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs_loc) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -521,7 +522,7 @@ public class SignalProcessing {
 
 
         double[] features = new double[NUMBER_OF_FEATURES];
-        List<Integer> rr_intervals = compute_RR(qrs);
+    List<Integer> rr_intervals = compute_RR(qrs_loc);
 
         for (int iSegment = 0; iSegment < segments.size(); iSegment++) {
             // Only use middle segment
@@ -551,14 +552,14 @@ public class SignalProcessing {
         return features;
     }
 
-    private List<Integer> compute_RR(List<Integer> qrs) {
+    private List<Integer> compute_RR(List<Integer> qrs_loc) {
         // INPUT:
         //      - qrs:  Segmented signal from segments_around_qrs()
         // OUTPUT:
         //      - rr_intervals: Computed feature vector
         List<Integer> rr_intervals = new ArrayList<Integer>();
 
-        // TODO: Computer RR-intervals
+        for (int i = 0; i < qrs_loc.size(); )
 
 
         return rr_intervals;
@@ -650,6 +651,14 @@ public class SignalProcessing {
         }
     }
 
+    private List<Integer> getQrsLoc(List<Integer> qrs) {
+        List<Integer> qrs_loc = new ArrayList<>();
+        for (int i = 0; i < qrs.size(); i++) {
+            qrs_loc.add(i);
+        }
+
+        return qrs_loc;
+    }
 
 
 
