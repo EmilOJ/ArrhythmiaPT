@@ -226,6 +226,11 @@ public class SignalProcessing {
         // Average
         mSignal = filter(mSignal, b_avg);
 
+        // Correct for filter delay
+        int delay = 59;
+        mSignal = circshift(mSignal,delay);
+
+        //TODO: correct for delay caused by filters
 
         /* Detection*/
         int i = 0;
@@ -287,7 +292,7 @@ public class SignalProcessing {
                             }
 
                             // Set new max in buffer
-                            window_max_buff = circshift(window_max_buff, 1);
+                            window_max_buff = circshift(window_max_buff);
                             window_max_buff[0] = window_max;
                             // Update threshold as median of last 5 window_max
                             //(window_max_buff) weighted by threshold correction
@@ -398,12 +403,28 @@ public class SignalProcessing {
         return array;
     }
 
-    public double[] circshift(double[] array, int shift){
+    public double[] circshift(double[] array){
         double temp = array[array.length-1];
-        for (int i = 0; i < array.length-shift-1;i++){
+        for (int i = 0; i < array.length-2;i++){
             array[array.length-1-i] = array[array.length-i-2];
         }
         array[0] = temp;
+        return array;
+    }
+
+    public List<Double> circshift(List<Double> array, int shift){
+        //double[] temp = Arrays.copyOfRange(array, array.size()-shift, array.size()-1);
+        double[] temp = new double[shift];
+        for (int i = 0; i < shift; i ++) {
+            double value = array.get(i);
+            temp[i] = value;
+        }
+        for (int i = 0; i < array.size()-shift-1;i++){
+            array.set(array.size()-1-i,array.get(array.size()-i-2));
+        }
+        for (int i = 0; i < temp.length; i++) {
+            array.add(temp[i]);
+        }
         return array;
     }
 
@@ -413,7 +434,7 @@ public class SignalProcessing {
         double lin_sum;
         int filter_order = coefficients.size();
         for (int i = 0; i < filter_order; i++) {
-            _signal.add(0.0);
+            _signal.add(0,0.0);
         }
 
         for (int i = filter_order;i<_signal.size();i++){
