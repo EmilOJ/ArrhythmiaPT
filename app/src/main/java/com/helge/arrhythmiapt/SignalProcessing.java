@@ -433,11 +433,11 @@ public class SignalProcessing {
         return array;
     }
 
-    public List<Double> filter(List<Double> signal, List<Double> coefficients) {
+    public List<Double> filter(List<Double> signal, List<Double> b) {
         List<Double> _signal = signal;
         List<Double> _filtered_signal = new ArrayList<>();
         double lin_sum;
-        int filter_order = coefficients.size();
+        int filter_order = b.size();
         for (int i = 0; i < filter_order; i++) {
             _signal.add(0,0.0);
         }
@@ -445,7 +445,35 @@ public class SignalProcessing {
         for (int i = filter_order;i<_signal.size();i++){
             lin_sum = 0;
             for (int j = 0; j < filter_order; j++) {
-                lin_sum += coefficients.get(j) * _signal.get(i - j);
+                lin_sum += b.get(j) * _signal.get(i - j);
+            }
+            _filtered_signal.add(lin_sum);
+        }
+
+        return _filtered_signal;
+    }
+
+    public List<Double> filter(List<Double> signal, List<Double> b, List<Double> a) {
+        List<Double> _signal = signal;
+        List<Double> _filtered_signal = new ArrayList<>();
+        double lin_sum;
+        int b_order = b.size();
+        int a_order = a.size();
+        for (int i = 0; i < b_order; i++) {
+            _signal.add(0, 0.0);
+        }
+        for (int i = 0; i < a_order; i++) {
+            _filtered_signal.add(0.0);
+        }
+
+
+        for (int i = b_order; i < _signal.size(); i++) {
+            lin_sum = 0;
+            for (int j = 0; j < b_order; j++) {
+                lin_sum += b.get(j) * _signal.get(i - j);
+            }
+            for (int j = 1; j < a_order; j++) {
+                lin_sum -= a.get(j) * _filtered_signal.get(i - j + 1);
             }
             _filtered_signal.add(lin_sum);
         }
