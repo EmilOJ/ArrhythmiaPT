@@ -414,6 +414,8 @@ public class SignalProcessing {
 
     public List<Double> circshift(List<Double> array, int shift){
         //double[] temp = Arrays.copyOfRange(array, array.size()-shift, array.size()-1);
+        //List<Double> temp = array.subList(0,shift);
+
         double[] temp = new double[shift];
         for (int i = 0; i < shift; i ++) {
             double value = array.get(i);
@@ -425,6 +427,9 @@ public class SignalProcessing {
         for (int i = 0; i < temp.length; i++) {
             array.add(temp[i]);
         }
+
+
+
         return array;
     }
 
@@ -455,16 +460,15 @@ public class SignalProcessing {
         // INPUT:
         //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
         // OUTPUT:
-        //      - mSegments:  The three mSegments consisting of ±200 ms around each QRS complex
+        //      - mSegments:  mSegments consisting of ±200 ms around each QRS complex
 
         ArrayList<ArrayList<Double>> segments = new ArrayList<ArrayList<Double>>();
 
-      //  int total_segments_length = SEGMENT_LENGTH * 2 + 1;
         List<Double> segment;
         int pre_qrs, post_qrs, cur_qrs;
 
 
-        for (int j = 0; j < 3; j++) {
+        for (int j = 0; j < qrsArray.size(); j++) {
             // Find sample index for segment
             cur_qrs = qrsArray.get(j);
             pre_qrs = cur_qrs - SEGMENT_LENGTH;
