@@ -1,16 +1,17 @@
 package com.helge.arrhythmiapt;
 
 import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
 
+import com.google.common.io.ByteStreams;
 import com.helge.arrhythmiapt.Models.Arrhythmia;
+import com.helge.arrhythmiapt.Models.ECGRecording;
 import com.helge.arrhythmiapt.Models.SVMStruct;
+import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +32,7 @@ public class SignalProcessing {
     final Context mContext;
     public List<Double> mSignal = new ArrayList<>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<>();
-    public List<Integer> mQrs;
+    ECGRecording mECGgRecording;
 
     public SignalProcessing(Context context) {
         mContext = context;
@@ -89,37 +90,25 @@ public class SignalProcessing {
 
         //The file is saved in the internal storage , and is found as such:
         InputStream is = mContext.getResources().openRawResource(R.raw.samples);
-        //The file is read:
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        byte[] data = ByteStreams.toByteArray(is);
+        mECGgRecording = new ECGRecording();
+        mECGgRecording.setData(new ParseFile("data.csv", data));
+        mECGgRecording.setFs(360);
+        mECGgRecording.setDownSamplingRate(5);
+
 
         try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                try {
-                    String[] RowData = line.split(",");
-                    this.mSignal.add(Double.parseDouble(RowData[2])); //adding mSignal to array
-                    //mSignal.add(Double.parseDouble(RowData[1])); //adding time to array??
-                } catch (Exception e) {
-                    Log.d(TAG, e.toString());
-                }
-            }
-        } catch (IOException ex) {
-            Toast toast = Toast.makeText(mContext, "ERROR: File not read", Toast.LENGTH_SHORT);
-            toast.show();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                Toast toast = Toast.makeText(mContext, "ERROR: File not closed", Toast.LENGTH_SHORT);
-                toast.show();
-            }
+            mECGgRecording.save();
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+
     }
 
     public void detect_and_classify() {
         List<Integer> qrs_detected;
         ArrayList<ArrayList<Double>> segments;
-        double[] features = new double[NUMBER_OF_FEATURES];
+        double[] features;
         int detected_qrs;
         List<Integer> qrs_loc;
         List<String> classification;
@@ -139,7 +128,7 @@ public class SignalProcessing {
         classification = classify_segments(segments, features);
 
         // Save classification and mSignal to database
-        save_classification(classification, qrs_detected);
+        save_classification(classification, qrs_loc);
 
         // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
         // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
@@ -173,6 +162,7 @@ public class SignalProcessing {
 
         //public void QRS_detection( double[] ecg, double[] b_low, double[] b_high,int b_avg, int delay) { //outputs: qrs, h_thres_array, ecg
 
+        mSignal = mECGgRecording.getData();
         // Important Values
         int window = 2 * FS; // 2 second window
         double h_thresh = 0; // initial value of h_thresh
@@ -292,8 +282,8 @@ public class SignalProcessing {
                             if (rr_cur < rr_tolerance_phys[0] || rr_cur > rr_tolerance_phys[1]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance[0] = rr_last * 0.3;
-                                rr_tolerance[1] = rr_last * 1.9;
+                                rr_tolerance[0] = rr_last * 0.5;
+                                rr_tolerance[1] = rr_last * 1.6;
                             }
 
                             // Set new max in buffer
@@ -347,6 +337,10 @@ public class SignalProcessing {
                 }
             }
             h_thres_array[i] = h_thresh;
+            if (i % 1000 == 0) {
+                //
+                i = i;
+            }
             i = i + 1;
         }
         return qrs_loc;
@@ -453,34 +447,42 @@ public class SignalProcessing {
         return _filtered_signal;
     }
 
-    public List<Double> filter(List<Double> signal, List<Double> b, List<Double> a) {
+    public List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
         List<Double> _signal = signal;
-        List<Double> _filtered_signal = new ArrayList<>();
+
         double lin_sum;
         int b_order = b.size();
         int a_order = a.size();
-        for (int i = 0; i < b_order; i++) {
-            _signal.add(0, 0.0);
-        }
-        for (int i = 0; i < a_order; i++) {
-            _filtered_signal.add(0.0);
-        }
 
+        for (int times = 0; times < 2; times++) {
+            List<Double> _filtered_signal = new ArrayList<>();
 
-        for (int i = b_order; i < _signal.size(); i++) {
-            lin_sum = 0;
-            for (int j = 0; j < b_order; j++) {
-                lin_sum += b.get(j) * _signal.get(i - j);
+            for (int i = 0; i < b_order; i++) {
+                _signal.add(0, 0.0);
             }
-            for (int j = 1; j < a_order; j++) {
-                lin_sum -= a.get(j) * _filtered_signal.get(i - j + 1);
+            for (int i = 0; i < a_order; i++) {
+                _filtered_signal.add(0.0);
             }
-            _filtered_signal.add(lin_sum);
+
+
+            for (int i = b_order; i < _signal.size(); i++) {
+                lin_sum = 0;
+                for (int j = 0; j < b_order; j++) {
+                    lin_sum += b.get(j) * _signal.get(i - j);
+                }
+                for (int j = 1; j < a_order; j++) {
+                    lin_sum -= a.get(j) * _filtered_signal.get(i - j + 1);
+                }
+                _filtered_signal.add(lin_sum);
+            }
+
+            Collections.reverse(_filtered_signal);
+            _signal = _filtered_signal;
+
         }
 
-        return _filtered_signal;
+        return _signal;
     }
-
 
 
 
@@ -554,13 +556,14 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
 
     private List<Integer> compute_RR(List<Integer> qrs_loc) {
         // INPUT:
-        //      - qrs:  Segmented signal from segments_around_qrs()
+        //      - qrs_loc:  qrs locations in samples
         // OUTPUT:
-        //      - rr_intervals: Computed feature vector
+        //      - rr_intervals: computed RR-intervals in samples
         List<Integer> rr_intervals = new ArrayList<Integer>();
 
-        for (int i = 0; i < qrs_loc.size(); )
-
+        for (int i = 0; i <= qrs_loc.size() - 2; i++) {
+            rr_intervals.add(Math.abs(qrs_loc.get(i + 1) - qrs_loc.get(i)));
+        }
 
         return rr_intervals;
     }
@@ -587,8 +590,9 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
         } else {
             classification = -1;
         }
-
-        return classification;
+        //TODO: Implement classification
+        List<String> foo = new ArrayList<>();
+        return foo;
     }
 
     private double innerProduct(double[] a, double[] b) {
@@ -602,14 +606,17 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
     }
 
 
-    private void save_classification(List<String> classification, List<Integer> qrs) {
+    private void save_classification(List<String> classification, List<Integer> qrs_loc) {
         // INPUT:
         //      - classification:    from classify_segments()
         //      - qrs:               detected qrs locations
         // Saves classification to database
-        extractArrhythmias(classification, qrs);
 
-        // TODO: Save classification to database
+        List<Arrhythmia> arrhythmias = extractArrhythmias(classification, qrs_loc);
+
+        ParseObject.saveAllInBackground(arrhythmias);
+
+
         // TODO: Save signal segments to database or maybe just QRS locations?
 
     }
@@ -633,22 +640,38 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
         b.add(1.0);
         b.add(-1.0);
 
-        mSignal = filter(mSignal, b, a);
+        mSignal = filtfilt(mSignal, b, a);
     }
 
-    private void computeArrhythmiaTimes(int arrythmia_index, List<Integer> qrs) {
+    private Arrhythmia computeArrhythmiaTimes(List<Integer> arrythmia_index, List<Integer> qrs_loc) {
+        int start = qrs_loc.get(arrythmia_index.get(0));
+        int stop = qrs_loc.get(arrythmia_index.get(arrythmia_index.size() - 1));
 
+        return new Arrhythmia(start, stop);
     }
 
-    private void extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs) {
+    private List<Arrhythmia> extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs_loc) {
         List<Arrhythmia> arrhythmias = new ArrayList<>();
+        List<Integer> cur_arrhythmias = new ArrayList<>();
+        String arrhythmia;
 
-        for (int i = 0; i < detected_arrhythmias.size(); i++) {
-            String arrhythmia = detected_arrhythmias.get(i);
+        boolean arrhythmia_found = true;
+        int i = 0;
+        while (i < detected_arrhythmias.size()) {
+            arrhythmia = detected_arrhythmias.get(i);
             if (!arrhythmia.equals("N")) {
-                computeArrhythmiaTimes(i, qrs);
+                arrhythmia_found = true;
+                cur_arrhythmias.add(i);
+            } else if (arrhythmia_found) {
+                arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc));
+
+                arrhythmia_found = false;
+                cur_arrhythmias.clear();
             }
+            i++;
         }
+
+        return arrhythmias;
     }
 
     private List<Integer> getQrsLoc(List<Integer> qrs) {

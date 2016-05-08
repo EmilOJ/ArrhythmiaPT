@@ -19,12 +19,11 @@ public class Arrhythmia extends ParseObject {
     public Arrhythmia() {
     }
 
-    public String getRecordingID() {
-        return getString(sRecordingId);
-    }
-
-    public void setRecordingId(String recordingId) {
-        put(sRecordingId, recordingId);
+    public Arrhythmia(int start, int stop) {
+        super("Arrythmia");
+        this.put(sStart, start);
+        this.put(sStop, stop);
+        this.put(sDuration, computeDuration());
     }
 
     public Arrhythmia(int start, int stop, String type) {
@@ -33,6 +32,14 @@ public class Arrhythmia extends ParseObject {
         this.put(sStop, stop);
         this.put(sType, type);
         this.put(sDuration, computeDuration());
+    }
+
+    public String getRecordingID() {
+        return getString(sRecordingId);
+    }
+
+    public void setRecordingId(String recordingId) {
+        put(sRecordingId, recordingId);
     }
 
     private double computeDuration() {
@@ -59,16 +66,16 @@ public class Arrhythmia extends ParseObject {
         return getInt(sStop);
     }
 
+    public void setStop(double stop) {
+        put(sStop, stop);
+    }
+
     public double getStopTime() {
         return this.getStop() / this.getECGRecoridng().getFs();
     }
 
     public double getStartTime() {
         return this.getStart() / this.getECGRecoridng().getFs();
-    }
-
-    public void setStop(double stop) {
-        put(sStop, stop);
     }
 
     public int getStart() {

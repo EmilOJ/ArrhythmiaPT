@@ -17,13 +17,16 @@ import java.util.List;
  */
 @ParseClassName("ECGRecording")
 public class ECGRecording extends ParseObject {
-    private List<Double> mData;
     String sData = "data";
     String sFs = "fs";
     String sStart = "start";
     String sStop = "stop";
     String sArrhythmias = "arrhythmias";
     String sDownSamplingRate = "downSamplingRate";
+    private List<Double> mData;
+
+    public ECGRecording() {
+    }
 
     public int getDownSamplingRate() {
         return getInt(sDownSamplingRate);
@@ -40,9 +43,6 @@ public class ECGRecording extends ParseObject {
 
         return maxValue;
     }
-
-
-    public ECGRecording() {}
 
     public Double getFs() {
         return getDouble(sFs);
@@ -82,14 +82,6 @@ public class ECGRecording extends ParseObject {
         return aList;
     }
 
-    public void setArrhythmias(List<Arrhythmia> arrhythmias) {
-        put(sArrhythmias, arrhythmias);
-    }
-
-    public void setData(ParseFile data) {
-        put(sData, data);
-    }
-
     private void getAndConvertData() {
         String dataString = null;
         try {
@@ -100,7 +92,7 @@ public class ECGRecording extends ParseObject {
         List<String> dataPairs = Arrays.asList(dataString.split("\n"));
         mData = new ArrayList<>();
 
-        for (int i=0; i < dataPairs.size(); i++) {
+        for (int i = 0; i < dataPairs.size(); i++) {
             try {
                 mData.add(Double.parseDouble(dataPairs.get(i).split(",")[1]));
             } catch (Exception e) {
@@ -115,6 +107,10 @@ public class ECGRecording extends ParseObject {
         }
 
         return mData;
+    }
+
+    public void setData(ParseFile data) {
+        put(sData, data);
     }
 
     public DataPoint[] asDataPoints() {
