@@ -125,7 +125,7 @@ public class SignalProcessing {
         features = get_features(segments, qrs_detected);
 
         // Classify with support vector machine
-        classification = classify_segments(segments, features);
+        classification = classify_segments(features);
 
         // Save classification and mSignal to database
         save_classification(classification, qrs_loc);
@@ -514,7 +514,7 @@ public class SignalProcessing {
 
 
 //
-private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs_loc) {
+private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs_loc) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -522,8 +522,10 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
         // OUTPUT:
         //      - features: Computed feature vector
 
+    ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
+    //double[] features = new double[NUMBER_OF_FEATURES];
 
-        double[] features = new double[NUMBER_OF_FEATURES];
+    ArrayList<Double> features = new ArrayList<Double>();
     List<Integer> rr_intervals = compute_RR(qrs_loc);
 
         for (int iSegment = 0; iSegment < segments.size(); iSegment++) {
@@ -534,9 +536,9 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
             double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1
-            features[0] = (K / rr_intervals.get(0));
+            features.add(K / rr_intervals.get(0)); //TODO: iSegment ??
             // Feature 2
-            features[1] = (K / rr_intervals.get(1));
+            features.add(K / rr_intervals.get(1)); //TODO: iSegment +1 ??
 
             // Feature 3-17
             // Implement wavelet transform from Jwave.
@@ -545,13 +547,14 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
             wavelet_coefficients = t.forward(segmentArray);
 
             // Set features 3-17 to wavelet coefficients
-            for (int i = 2; i < wavelet_coefficients.length; i++) {
-                features[i] = wavelet_coefficients[i-2];
+            for (int i = 2; i < 17; i++) {
+                features.add(wavelet_coefficients[i-2]);
             }
+            all_features.add(features);
         }
 
 
-        return features;
+        return all_features;
     }
 
     private List<Integer> compute_RR(List<Integer> qrs_loc) {
@@ -568,31 +571,63 @@ private double[] get_features(ArrayList<ArrayList<Double>> segments, List<Intege
         return rr_intervals;
     }
 
-    private List<String> classify_segments(ArrayList<ArrayList<Double>> segments, double[] features) {
+    private List<String> classify_segments(ArrayList<ArrayList<Double>> all_features) {
         // INPUT:
         //      - segments:
         //      - features:
         // OUTPUT:
         //      - segments:  The three segments consisting of ±200 ms around each QRS complex
-        int classification;
+
+        ArrayList<String> classification = new ArrayList<String>();
+        String group_belonging;
 
 
-        int c = 0;
-        double bias = mSVMStruct.getBias();
-        double[] alpha = mSVMStruct.getAlpha();
-        double[][] vectors = mSVMStruct.getSupportVectors();
-        for (int i = 0; i < mSVMStruct.getNumberOfVectors(); i++) {
-            c += alpha[i] * innerProduct(vectors[i], features) + bias;
+        // classify each segment
+        for (int i = 0; i < all_features.size(); i++) {
+
+            double[] cur_features = all_features.get(i); //TODO: fix this
+
+            // Estimate degree of belonging to VT group
+            int c1 = 0;
+            double bias1 = mSVMStruct_VT.getBias();
+            double[] alpha1 = mSVMStruct_VT.getAlpha();
+            double[][] vectors1 = mSVMStruct_VT.getSupportVectors();
+            for (int ii = 0; ii < mSVMStruct_VT.getNumberOfVectors(); ii++) {
+                c1 += alpha1[ii] * innerProduct(vectors1[ii], cur_features) + bias1;
+            }
+
+            // Estimate degree of belonging to AF group
+            int c2 = 0;
+            double bias2 = mSVMStruct_AF.getBias();
+            double[] alpha2 = mSVMStruct_AF.getAlpha();
+            double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
+            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
+                c1 += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+            }
+
+            // Estimate degree of belonging to VT group
+            int c3 = 0;
+            double bias3 = mSVMStruct_N.getBias();
+            double[] alpha3 = mSVMStruct_N.getAlpha();
+            double[][] vectors3 = mSVMStruct_N.getSupportVectors();
+            for (int ii = 0; ii < mSVMStruct_N.getNumberOfVectors(); ii++) {
+                c1 += alpha3[ii] * innerProduct(vectors3[ii], cur_features) + bias3;
+            }
+
+            if (c3 > c1 && c3 > c2) {
+                group_belonging = "N";
+            } else if (c2 > c1 && c2 > c3) {
+                group_belonging = "AF";
+            } else {
+                group_belonging = "VT";
+            }
+
+            classification.add(group_belonging);
+
+
         }
 
-        if (c >= 0) {
-            classification = 1;
-        } else {
-            classification = -1;
-        }
-        //TODO: Implement classification
-        List<String> foo = new ArrayList<>();
-        return foo;
+        return classification;
     }
 
     private double innerProduct(double[] a, double[] b) {
