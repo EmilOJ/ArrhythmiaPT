@@ -225,8 +225,6 @@ public class SignalProcessing {
         int delay = 59;
         mSignal = circshift(mSignal,delay);
 
-        //TODO: correct for delay caused by filters
-
         /* Detection*/
         int i = 0;
         // Loop through entire signal
@@ -263,7 +261,6 @@ public class SignalProcessing {
                             rr_cur = Math.abs((last_qrs[0]) - candidate_pos);
 
                             // Save candidate as new detected QRS peak.
-                            //qrs_loc[candidate_pos] = 1;
                             qrs_loc.set(candidate_pos, 1);
 
                             // Save last 5 detected qrs
@@ -273,12 +270,10 @@ public class SignalProcessing {
                             // Save RR-interval of last 5 qrs and use it to
                             // define search window
                             rr = diff(last_qrs);
-
                             rr = neglectZeros(rr);
-
                             rr = abs(rr);
+                            rr_last = mean(rr);
 
-                            rr_last = mean(rr); // neglect zero
                             if (rr_cur < rr_tolerance_phys[0] || rr_cur > rr_tolerance_phys[1]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
