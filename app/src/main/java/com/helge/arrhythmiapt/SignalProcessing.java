@@ -12,6 +12,7 @@ import com.parse.ParseObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -111,6 +112,7 @@ public class SignalProcessing {
         List<Integer> qrs_detected;
         ArrayList<ArrayList<Double>> segments;
         double[] features;
+        ArrayList<ArrayList<Double>> all_features;
         int detected_qrs;
         List<Integer> qrs_loc;
         List<String> classification;
@@ -127,10 +129,10 @@ public class SignalProcessing {
         all_features = get_features(segments, qrs_detected);
 
         // Classify with support vector machine
-        classification = classify_segments(all_features);
+        //classification = classify_segments(all_features);
 
         // Save classification and mSignal to database
-        save_classification(classification, qrs_loc);
+        //save_classification(classification, qrs_loc);
 
         // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
         // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
@@ -590,7 +592,13 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
         // classify each segment
         for (int i = 0; i < all_features.size(); i++) {
 
-            double[] cur_features = all_features.get(i); //TODO: fix this
+            double[] cur_features = new double[17];
+
+            List<Double> cur = all_features.get(i); //TODO: fix this
+
+            for (int ii = 0; ii < cur_features.length; ii++) {
+                cur_features[ii] = cur.get(ii);
+            }
 
             // Estimate degree of belonging to VT group
             int c1 = 0;
