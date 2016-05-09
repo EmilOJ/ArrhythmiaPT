@@ -39,7 +39,9 @@ public class SignalProcessing {
 
     public SignalProcessing(Context context) {
         mContext = context;
-        mSVMStruct_VT = new SVMStruct(mContext);
+        mSVMStruct_VT = new SVMStruct(mContext, "vt");
+        mSVMStruct_AF = new SVMStruct(mContext, "af");
+        mSVMStruct_N = new SVMStruct(mContext, "n");
     }
 
     // TODO: check sorting is correct
