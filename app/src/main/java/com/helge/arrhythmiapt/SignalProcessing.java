@@ -28,7 +28,9 @@ public class SignalProcessing {
     static final int FS = 360; // Sample rate in Hz
     static final int SEGMENT_LENGTH = (int) Math.floor((200.0 / 1000) * FS);
     static final int REFRACTORY_PERIOD = (int) Math.floor((250.0 / 1000) * FS);
-    private static SVMStruct mSVMStruct;
+    private static SVMStruct mSVMStruct_VT;
+    private static SVMStruct mSVMStruct_AF;
+    private static SVMStruct mSVMStruct_N;
     final Context mContext;
     public List<Double> mSignal = new ArrayList<>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<>();
@@ -36,13 +38,13 @@ public class SignalProcessing {
 
     public SignalProcessing(Context context) {
         mContext = context;
-        mSVMStruct = new SVMStruct(mContext);
-
+        mSVMStruct_VT = new SVMStruct(mContext);
     }
 
-    // has to be sorted before - see MD app Fragment
+    // TODO: check sorting is correct
     public static double median(double[] m) {
         int middle = m.length / 2;
+        java.util.Arrays.sort(m);
         if (m.length % 2 == 1) {
             return m[middle];
         } else {
@@ -122,10 +124,10 @@ public class SignalProcessing {
         segments = segments_around_qrs(qrs_loc);
 
         // Compute features
-        features = get_features(segments, qrs_detected);
+        all_features = get_features(segments, qrs_detected);
 
         // Classify with support vector machine
-        classification = classify_segments(features);
+        classification = classify_segments(all_features);
 
         // Save classification and mSignal to database
         save_classification(classification, qrs_loc);
@@ -329,6 +331,9 @@ public class SignalProcessing {
                         // current candidate.
                         end_cand_search = i + REFRACTORY_PERIOD;
                     }
+                    //if (first_candidate) {
+                    //    end_cand_search = i + REFRACTORY_PERIOD*4;
+                    //}
                 }
             }
             h_thres_array[i] = h_thresh;
@@ -338,6 +343,11 @@ public class SignalProcessing {
             }
             i = i + 1;
         }
+        // let us print all the elements available in list
+        for (Double number : h_thres_array) {
+            System.out.println("H_thres_array = " + number);
+        }
+
         return qrs_loc;
 
         //TODO: if qrs_loc contains no ones - return empty list
