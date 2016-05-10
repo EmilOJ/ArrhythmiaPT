@@ -3,18 +3,134 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingBottom="0dp"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.helge.arrhythmiapt.MainMenu">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/apprhythmia"
+        android:src="@mipmap/apprhythmia"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/arrhythmiaECG"
+        android:src="@mipmap/aecg"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Notes"
+        android:textColor="@color/buttonTextColor"
         android:id="@+id/notesButton"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="76dp" />
+        android:layout_alignTop="@+id/patientname"
+        android:layout_alignEnd="@+id/arrhythmiaECG" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Patient name"
+        android:id="@+id/patientname"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="181dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/name"
+        android:layout_below="@+id/patientname"
+        android:layout_alignParentStart="true"
+        android:textStyle="italic"
+        android:textIsSelectable="false" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="CPR number:"
+        android:id="@+id/CPRnumber"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/name"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/cpr"
+        android:layout_below="@+id/CPRnumber"
+        android:layout_alignParentStart="true"
+        android:textStyle="italic"
+        android:textIsSelectable="false" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medicine:"
+        android:id="@+id/medicine"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/cpr"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/med1"
+        android:layout_below="@+id/medicine"
+        android:layout_alignParentStart="true"
+        android:textStyle="italic"
+        android:textIsSelectable="false" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/med2"
+        android:layout_below="@+id/med1"
+        android:layout_alignParentStart="true"
+        android:textStyle="italic"
+        android:textIsSelectable="false" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/med3"
+        android:textStyle="italic"
+        android:textIsSelectable="false"
+        android:layout_alignTop="@+id/med2"
+        android:layout_alignStart="@+id/med4" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/med4"
+        android:textStyle="italic"
+        android:textIsSelectable="false"
+        android:layout_above="@+id/med2"
+        android:layout_toEndOf="@+id/medicine" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Personal information"
+        android:textColor="@color/buttonTextColor"
+        android:id="@+id/personalINFO"
+        android:textStyle="italic"
+        android:layout_marginTop="120dp"/>
+
+
 </RelativeLayout>

@@ -9,11 +9,19 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.helge.arrhythmiapt.RegisterActivity">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/apprhythmia"
+        android:src="@mipmap/apprhythmia"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/etName"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/apprhythmia"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentRight="true"
@@ -62,6 +70,7 @@
         android:text="Register"
         android:id="@+id/bRegister"
         android:layout_below="@+id/etPassword"
+        android:textColor="@color/buttonTextColor"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="49dp"

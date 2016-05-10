@@ -8,6 +8,13 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.helge.arrhythmiapt.Notes.NotesListActivity">
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/apprhythmia"
+        android:src="@mipmap/apprhythmia"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 
     <ListView
@@ -15,6 +22,7 @@
         android:layout_height="fill_parent"
         android:id="@+id/notesListView"
         android:layout_alignParentStart="true"
+        android:layout_below="@id/apprhythmia"
         android:layout_marginBottom="60dp" />
 
     <Button
@@ -22,6 +30,7 @@
         android:layout_height="wrap_content"
         android:text="Add Note"
         android:id="@+id/addButton"
+        android:textColor="@color/buttonTextColor"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>
