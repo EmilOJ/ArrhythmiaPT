@@ -24,7 +24,7 @@ public class MainMenu extends AppCompatActivity {
         setContentView(R.layout.activity_main_menu);
 
         String patientName = "Lone Hansen";
-        String patientCPR = "";
+        String patientCPR = "111100-1111";
         // Name of patient
         TextView textView6 = (TextView) findViewById(R.id.name);
         textView6.setText(patientName);

@@ -32,13 +32,13 @@ public class LoginActivity extends AppCompatActivity {
         final EditText etPassword = (EditText) findViewById(R.id.etPassword);
         final Button bLogin = (Button) findViewById(R.id.bLogin);
         final TextView registerLink = (TextView) findViewById(R.id.tvRegisterHere);
-        final Button goButton = (Button) findViewById(R.id.goButton);
+        //final Button goButton = (Button) findViewById(R.id.goButton);
 
         assert etUsername != null;
         assert etPassword != null;
         assert bLogin != null;
         assert registerLink != null;
-        assert goButton != null;
+        //assert goButton != null;
 
         registerLink.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,13 +70,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        goButton.setOnClickListener(new View.OnClickListener() {
+       /* goButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(LoginActivity.this, MainMenu.class);
                 startActivity(i);
             }
-        });
+        });*/
 
 //      Get intent extra and display status
         Bundle extras = getIntent().getExtras();

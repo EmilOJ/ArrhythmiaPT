@@ -7,7 +7,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.helge.arrhythmiapt.MainMenu">
+    tools:context="com.helge.arrhythmiapt.MainMenu"
+    android:background="@color/backgroundColor">
 
     <ImageView
         android:layout_width="wrap_content"
@@ -25,14 +26,6 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Notes"
-        android:textColor="@color/buttonTextColor"
-        android:id="@+id/notesButton"
-        android:layout_alignTop="@+id/medicine"
-        android:layout_alignEnd="@+id/arrhythmiaECG" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -41,7 +34,7 @@
         android:text="Patient name"
         android:id="@+id/patientname"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="181dp" />
+        android:layout_marginTop="161dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -92,7 +85,7 @@
         android:id="@+id/med1"
         android:layout_below="@+id/medicine"
         android:layout_alignParentStart="true"
-        android:textStyle="italic"
+        android:textStyle="bold"
         android:textIsSelectable="false" />
     <TextView
         android:layout_width="wrap_content"
@@ -102,25 +95,23 @@
         android:layout_below="@+id/med1"
         android:layout_alignParentStart="true"
         android:textStyle="italic"
+        android:textSize="10dp"
         android:textIsSelectable="false" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="New Text"
         android:id="@+id/med3"
-        android:textStyle="italic"
-        android:textIsSelectable="false"
-        android:layout_alignTop="@+id/med2"
-        android:layout_alignStart="@+id/med4" />
+        android:textStyle="bold"
+        android:layout_below="@id/med2" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="New Text"
         android:id="@+id/med4"
         android:textStyle="italic"
-        android:textIsSelectable="false"
-        android:layout_above="@+id/med2"
-        android:layout_toEndOf="@+id/medicine" />
+        android:textSize="10dp"
+        android:layout_below="@id/med3"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -130,13 +121,14 @@
         android:textColor="@color/buttonTextColor"
         android:id="@+id/personalINFO"
         android:textStyle="italic"
-        android:layout_marginTop="120dp"/>
+        android:layout_marginTop="110dp"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Detect"
         android:id="@+id/detectButton"
+        android:textColor="@color/buttonTextColor"
         android:layout_below="@+id/patientname"
         android:layout_alignEnd="@+id/arrhythmiaECG" />
 
@@ -144,10 +136,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Q"
+        android:textColor="@color/buttonTextColor"
         android:id="@+id/questionButton"
         android:layout_below="@+id/detectButton"
         android:layout_alignEnd="@+id/arrhythmiaECG"
         android:layout_alignStart="@+id/notesButton" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Notes"
+        android:textColor="@color/buttonTextColor"
+        android:id="@+id/notesButton"
+        android:layout_below="@id/patientname"
+        android:layout_marginTop="95dp"
+        android:layout_alignEnd="@+id/arrhythmiaECG" />
 
 
 </RelativeLayout>

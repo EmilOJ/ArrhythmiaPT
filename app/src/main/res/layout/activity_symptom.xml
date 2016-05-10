@@ -3,12 +3,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingBottom="0dp"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.helge.arrhythmiapt.Notes.SymptomActivity"
-    android:id="@+id/c">
+    android:id="@+id/c"
+    android:background="@color/backgroundColor">
+
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/apprhythmia"
+        android:src="@mipmap/apprhythmia"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/arrhythmiaECG"
+        android:src="@mipmap/aecg"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -17,15 +35,15 @@
         android:id="@+id/textView"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="39dp" />
+        android:layout_marginTop="119dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/symptomText"
         android:layout_alignBottom="@+id/textView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="10dp" />
+        android:layout_marginLeft="130dp"
+        android:textStyle="italic"/>
 
     <EditText
         android:layout_width="wrap_content"
@@ -35,7 +53,7 @@
         android:id="@+id/timeEditText"
         android:layout_marginTop="60dp"
         android:layout_below="@+id/symptomText"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignEnd="@id/apprhythmia" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -66,8 +84,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Continue"
+        android:textColor="@color/buttonTextColor"
         android:id="@+id/symptomContinueButton"
-        android:layout_alignParentBottom="true"
+        android:layout_marginTop="330dp"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

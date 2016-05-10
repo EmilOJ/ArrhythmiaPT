@@ -7,7 +7,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.helge.arrhythmiapt.RegisterActivity">
+    tools:context="com.helge.arrhythmiapt.RegisterActivity"
+    android:background="@color/backgroundColor">
 
     <ImageView
         android:layout_width="wrap_content"
