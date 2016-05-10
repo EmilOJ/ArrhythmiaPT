@@ -1,18 +1,22 @@
 package com.helge.arrhythmiapt;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.helge.arrhythmiapt.Notes.NotesListActivity;
+import com.helge.arrhythmiapt.Notes.SymptomsActivity;
 
 import java.io.IOException;
 
 public class MainMenu extends AppCompatActivity {
     private static Button notesButton;
+    private static Button qButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +56,36 @@ public class MainMenu extends AppCompatActivity {
             }
         });
 
-        SignalProcessing signalProcessing = new SignalProcessing(this);
-        try {
-            signalProcessing.readECG();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        signalProcessing.detect_and_classify();
+        qButton = (Button) findViewById(R.id.questionButton);
+        qButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainMenu.this)
+                        .setIcon(android.R.drawable.ic_menu_add)
+                        .setTitle("Time for questions")
+                        .setMessage("Have you felt any symptoms since last time?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent i = new Intent(MainMenu.this, SymptomsActivity.class);
+                                startActivity(i);
+                            }
+
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
+        });
+
+
+
+//        SignalProcessing signalProcessing = new SignalProcessing(this);
+//        try {
+//            signalProcessing.readECG();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        signalProcessing.detect_and_classify();
     }
 }

@@ -32,14 +32,12 @@ public class LoginActivity extends AppCompatActivity {
         final EditText etPassword = (EditText) findViewById(R.id.etPassword);
         final Button bLogin = (Button) findViewById(R.id.bLogin);
         final TextView registerLink = (TextView) findViewById(R.id.tvRegisterHere);
-        final ProgressBar spinner = (ProgressBar) findViewById(R.id.progressBar2);
         final Button goButton = (Button) findViewById(R.id.goButton);
 
         assert etUsername != null;
         assert etPassword != null;
         assert bLogin != null;
         assert registerLink != null;
-        assert spinner != null;
         assert goButton != null;
 
         registerLink.setOnClickListener(new View.OnClickListener() {
@@ -55,8 +53,6 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String username = etUsername.getText().toString();
                 String password = etPassword.getText().toString();
-
-                spinner.setVisibility(View.VISIBLE);
                 bLogin.setEnabled(false);
 
 
@@ -67,13 +63,6 @@ public class LoginActivity extends AppCompatActivity {
                             Intent i = new Intent(LoginActivity.this, MainMenu.class);
                             startActivity(i);
                         } else {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    spinner.setVisibility(View.GONE);
-                                    bLogin.setEnabled(true);
-                                }
-                            });
                             Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
                         }
                     }

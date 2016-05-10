@@ -31,7 +31,7 @@
         android:text="Notes"
         android:textColor="@color/buttonTextColor"
         android:id="@+id/notesButton"
-        android:layout_alignTop="@+id/patientname"
+        android:layout_alignTop="@+id/medicine"
         android:layout_alignEnd="@+id/arrhythmiaECG" />
 
     <TextView
@@ -131,6 +131,23 @@
         android:id="@+id/personalINFO"
         android:textStyle="italic"
         android:layout_marginTop="120dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Detect"
+        android:id="@+id/detectButton"
+        android:layout_below="@+id/patientname"
+        android:layout_alignEnd="@+id/arrhythmiaECG" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Q"
+        android:id="@+id/questionButton"
+        android:layout_below="@+id/detectButton"
+        android:layout_alignEnd="@+id/arrhythmiaECG"
+        android:layout_alignStart="@+id/notesButton" />
 
 
 </RelativeLayout>

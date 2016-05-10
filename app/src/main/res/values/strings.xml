@@ -2,4 +2,18 @@
     <string name="app_name">ArrhythmiaPT</string>
     <string name="title">Hej</string>
     <string name="confirm">OK</string>
+
+    <!--Symptoms-->
+    <string name="symptomsTitle">Please check any symptoms you have felt from the following list.</string>
+    <string name="symptoms1">Fast heart beating</string>
+    <string name="symptoms2">Pain in the chest</string>
+    <string name="symptoms3">Shortness of breath</string>
+    <string name="symptoms4">Fainting</string>
+    <string name="symptoms5">Dizziness</string>
+    <string name="symptoms6">Nausea</string>
+    <string name="symptoms7">Vomitting</string>
+    <string name="symptoms8">Other</string>
+
+    <!--Symptom-->
+    <string name="symptomTitle">You have selected: </string>
 </resources>
