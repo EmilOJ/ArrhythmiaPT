@@ -1,8 +1,11 @@
 package com.helge.arrhythmiapt;
 
 import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.primitives.Doubles;
 import com.helge.arrhythmiapt.Models.Arrhythmia;
 import com.helge.arrhythmiapt.Models.ECGRecording;
 import com.helge.arrhythmiapt.Models.SVMStruct;
@@ -19,8 +22,10 @@ import java.util.Collections;
 import java.util.List;
 
 import jwave.Transform;
+import jwave.transforms.AncientEgyptianDecomposition;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.biorthogonal.BiOrthogonal35;
+import jwave.transforms.wavelets.daubechies.Daubechies4;
 
 public class SignalProcessing {
 
@@ -112,7 +117,7 @@ public class SignalProcessing {
 
     public void detect_and_classify() {
         List<Integer> qrs_detected;
-        ArrayList<ArrayList<Double>> segments;
+        List<List<Double>> segments;
         double[] features;
         ArrayList<ArrayList<Double>> all_features;
         int detected_qrs;
@@ -128,13 +133,13 @@ public class SignalProcessing {
         segments = segments_around_qrs(qrs_loc);
 
         // Compute features
-        all_features = get_features(segments, qrs_detected);
+        all_features = get_features(segments, qrs_loc);
 
         // Classify with support vector machine
-        //classification = classify_segments(all_features);
+        classification = classify_segments(all_features);
 
         // Save classification and mSignal to database
-        //save_classification(classification, qrs_loc);
+        save_classification(classification, qrs_loc);
 
         // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
         // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
@@ -169,6 +174,7 @@ public class SignalProcessing {
         //public void QRS_detection( double[] ecg, double[] b_low, double[] b_high,int b_avg, int delay) { //outputs: qrs, h_thres_array, ecg
 
         mSignal = mECGgRecording.getData();
+        int org_length = mSignal.size();
         // Important Values
         int window = 2 * FS; // 2 second window
         double h_thresh = 0; // initial value of h_thresh
@@ -234,7 +240,7 @@ public class SignalProcessing {
         /* Detection*/
         int i = 0;
         // Loop through entire signal
-        while (i < mSignal.size()) {
+        while (i < org_length) {
 
             // Check for new window max
             if (mSignal.get(i) > window_max) {
@@ -283,8 +289,8 @@ public class SignalProcessing {
                             if (rr_cur < rr_tolerance_phys[0] || rr_cur > rr_tolerance_phys[1]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance[0] = rr_last * 0.5;
-                                rr_tolerance[1] = rr_last * 1.6;
+                                rr_tolerance[0] = rr_last * 0.1;
+                                rr_tolerance[1] = rr_last * 2;
                             }
 
                             // Set new max in buffer
@@ -335,16 +341,14 @@ public class SignalProcessing {
                         // current candidate.
                         end_cand_search = i + REFRACTORY_PERIOD;
                     }
-                    //if (first_candidate) {
-                    //    end_cand_search = i + REFRACTORY_PERIOD*4;
-                    //}
+                    if (first_candidate) {
+                        end_cand_search = i + REFRACTORY_PERIOD*4;
+                    }
                 }
             }
+
             h_thres_array[i] = h_thresh;
-            if (i % 1000 == 0) {
-                //
-                i = i;
-            }
+
             i = i + 1;
         }
         // let us print all the elements available in list
@@ -480,7 +484,13 @@ public class SignalProcessing {
                     lin_sum += b.get(j) * _signal.get(i - j);
                 }
                 for (int j = 1; j < a_order; j++) {
-                    lin_sum -= a.get(j) * _filtered_signal.get(i - j + 1);
+                    try {
+                        lin_sum -= a.get(j) * _filtered_signal.get(i - j);
+                    } catch (Exception e) {
+                        Log.d("Test", "test");
+                    }
+
+
                 }
                 _filtered_signal.add(lin_sum);
             }
@@ -495,27 +505,30 @@ public class SignalProcessing {
 
 
 
-    private ArrayList<ArrayList<Double>> segments_around_qrs(List<Integer> qrsArray) {
+    private List<List<Double>> segments_around_qrs(List<Integer> qrsloc) {
         // INPUT:
         //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
         // OUTPUT:
         //      - mSegments:  mSegments consisting of ±200 ms around each QRS complex
 
-        ArrayList<ArrayList<Double>> segments = new ArrayList<ArrayList<Double>>();
+        List<List<Double>> segments = new ArrayList<>();
 
-        List<Double> segment;
+        List segment;
         int pre_qrs, post_qrs, cur_qrs;
 
 
-        for (int j = 0; j < qrsArray.size(); j++) {
+        for (int j = 0; j < qrsloc.size(); j++) {
             // Find sample index for segment
-            cur_qrs = qrsArray.get(j);
-            pre_qrs = cur_qrs - SEGMENT_LENGTH;
-            post_qrs = cur_qrs + SEGMENT_LENGTH;
+            cur_qrs = qrsloc.get(j);
+            if (cur_qrs >= SEGMENT_LENGTH && cur_qrs < cur_qrs + SEGMENT_LENGTH) {
+                pre_qrs = cur_qrs - SEGMENT_LENGTH;
+                post_qrs = cur_qrs + SEGMENT_LENGTH;
 
-            segment = mSignal.subList(pre_qrs, post_qrs);
+                segment = mSignal.subList(pre_qrs, post_qrs);
 
-            segments.add((ArrayList<Double>) segment);
+                segments.add(segment);
+            }
+
         }
 
         return segments;
@@ -523,7 +536,7 @@ public class SignalProcessing {
 
 
 //
-private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> segments, List<Integer> qrs_loc) {
+private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, List<Integer> qrs_loc) {
         // INPUT:
         //      - mSegments:  Segmented mSignal from segments_around_qrs()
         //      - mQrs:  Segmented mSignal from segments_around_qrs()
@@ -534,31 +547,32 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
     ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
     //double[] features = new double[NUMBER_OF_FEATURES];
 
-    ArrayList<Double> features = new ArrayList<Double>();
+    ArrayList<Double> features = new ArrayList<>();
     List<Integer> rr_intervals = compute_RR(qrs_loc);
 
-        for (int iSegment = 0; iSegment < segments.size(); iSegment++) {
+        for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
             // Only use middle segment
-            List<Double> segment = segments.get(1);
-            double[] segmentArray = asArray(segments.get(iSegment));
+            List<Double> segment = segments.get(iSegment);
+            double[] segmentArray = Doubles.toArray(segments.get(iSegment));
 
             double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1
-            features.add(K / rr_intervals.get(0)); //TODO: iSegment ??
+            features.add(K / rr_intervals.get(iSegment - 1)); //TODO: iSegment ??
             // Feature 2
-            features.add(K / rr_intervals.get(1)); //TODO: iSegment +1 ??
+            features.add(K / rr_intervals.get(iSegment)); //TODO: iSegment + 1 ??
 
             // Feature 3-17
             // Implement wavelet transform from Jwave.
-            double[] wavelet_coefficients = new double[segment.size()];
-            Transform t = new Transform(new FastWaveletTransform(new BiOrthogonal35()));
+            double[] wavelet_coefficients;
+            Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new BiOrthogonal35())));
             wavelet_coefficients = t.forward(segmentArray);
 
             // Set features 3-17 to wavelet coefficients
             for (int i = 2; i < 17; i++) {
                 features.add(wavelet_coefficients[i-2]);
             }
+
             all_features.add(features);
         }
 
@@ -596,11 +610,7 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
 
             double[] cur_features = new double[17];
 
-            List<Double> cur = all_features.get(i); //TODO: fix this
-
-            for (int ii = 0; ii < cur_features.length; ii++) {
-                cur_features[ii] = cur.get(ii);
-            }
+            cur_features = Doubles.toArray(all_features.get(i));
 
             // Estimate degree of belonging to VT group
             int c1 = 0;
@@ -617,7 +627,7 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
             double[] alpha2 = mSVMStruct_AF.getAlpha();
             double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
             for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
-                c1 += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+                c2 += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
             }
 
             // Estimate degree of belonging to VT group
@@ -626,7 +636,7 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
             double[] alpha3 = mSVMStruct_N.getAlpha();
             double[][] vectors3 = mSVMStruct_N.getSupportVectors();
             for (int ii = 0; ii < mSVMStruct_N.getNumberOfVectors(); ii++) {
-                c1 += alpha3[ii] * innerProduct(vectors3[ii], cur_features) + bias3;
+                c3 += alpha3[ii] * innerProduct(vectors3[ii], cur_features) + bias3;
             }
 
             if (c3 > c1 && c3 > c2) {
@@ -666,8 +676,7 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
 
         ParseObject.saveAllInBackground(arrhythmias);
 
-
-        // TODO: Save signal segments to database or maybe just QRS locations?
+        //TODO: Save signal segments to database or maybe just QRS locations?
 
     }
 
@@ -693,11 +702,14 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
         mSignal = filtfilt(mSignal, b, a);
     }
 
-    private Arrhythmia computeArrhythmiaTimes(List<Integer> arrythmia_index, List<Integer> qrs_loc) {
+    private Arrhythmia computeArrhythmiaTimes(List<Integer> arrythmia_index, List<Integer> qrs_loc, String type) {
         int start = qrs_loc.get(arrythmia_index.get(0));
         int stop = qrs_loc.get(arrythmia_index.get(arrythmia_index.size() - 1));
+        Arrhythmia a = new Arrhythmia(start, stop);
+        a.setRecordingId(mECGgRecording.getObjectId());
+        a.setType(type);
 
-        return new Arrhythmia(start, stop);
+        return a;
     }
 
     private List<Arrhythmia> extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs_loc) {
@@ -707,18 +719,22 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
 
         boolean arrhythmia_found = true;
         int i = 0;
+        arrhythmia = "";
         while (i < detected_arrhythmias.size()) {
             arrhythmia = detected_arrhythmias.get(i);
             if (!arrhythmia.equals("N")) {
                 arrhythmia_found = true;
                 cur_arrhythmias.add(i);
             } else if (arrhythmia_found) {
-                arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc));
+                arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
 
                 arrhythmia_found = false;
                 cur_arrhythmias.clear();
             }
             i++;
+        }
+        if (cur_arrhythmias.size() > 0) {
+            arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
         }
 
         return arrhythmias;
@@ -727,7 +743,9 @@ private ArrayList<ArrayList<Double>> get_features(ArrayList<ArrayList<Double>> s
     private List<Integer> getQrsLoc(List<Integer> qrs) {
         List<Integer> qrs_loc = new ArrayList<>();
         for (int i = 0; i < qrs.size(); i++) {
-            qrs_loc.add(i);
+            if (qrs.get(i) == 1) {
+                qrs_loc.add(i);
+            }
         }
 
         return qrs_loc;
