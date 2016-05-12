@@ -86,6 +86,7 @@ public class MainMenu extends AppCompatActivity {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
+//        }
 //        signalProcessing.detect_and_classify();
     }
 }

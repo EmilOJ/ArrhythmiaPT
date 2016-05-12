@@ -126,21 +126,11 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Detect"
-        android:id="@+id/detectButton"
-        android:textColor="@color/buttonTextColor"
-        android:layout_below="@+id/patientname"
-        android:layout_alignEnd="@+id/arrhythmiaECG" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Q"
+        android:text="Record"
         android:textColor="@color/buttonTextColor"
         android:id="@+id/questionButton"
-        android:layout_below="@+id/detectButton"
-        android:layout_alignEnd="@+id/arrhythmiaECG"
-        android:layout_alignStart="@+id/notesButton" />
+        android:layout_alignBottom="@+id/cpr"
+        android:layout_alignEnd="@+id/arrhythmiaECG" />
 
     <Button
         android:layout_width="wrap_content"
@@ -148,8 +138,7 @@
         android:text="Notes"
         android:textColor="@color/buttonTextColor"
         android:id="@+id/notesButton"
-        android:layout_below="@id/patientname"
-        android:layout_marginTop="95dp"
+        android:layout_below="@+id/questionButton"
         android:layout_alignEnd="@+id/arrhythmiaECG" />
 
 

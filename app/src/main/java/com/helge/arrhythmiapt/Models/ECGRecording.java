@@ -94,7 +94,7 @@ public class ECGRecording extends ParseObject {
 
         for (int i = 0; i < dataPairs.size(); i++) {
             try {
-                mData.add(Double.parseDouble(dataPairs.get(i).split(",")[1]));
+                mData.add(Double.parseDouble(dataPairs.get(i)));
             } catch (Exception e) {
 
             }

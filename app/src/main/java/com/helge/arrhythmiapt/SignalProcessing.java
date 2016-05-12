@@ -2,7 +2,6 @@ package com.helge.arrhythmiapt;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Doubles;
@@ -15,7 +14,6 @@ import com.parse.ParseObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,7 +22,6 @@ import java.util.List;
 import jwave.Transform;
 import jwave.transforms.AncientEgyptianDecomposition;
 import jwave.transforms.FastWaveletTransform;
-import jwave.transforms.wavelets.biorthogonal.BiOrthogonal35;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
 
 public class SignalProcessing {
@@ -565,7 +562,7 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
             // Feature 3-17
             // Implement wavelet transform from Jwave.
             double[] wavelet_coefficients;
-            Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new BiOrthogonal35())));
+            Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new Daubechies4())));
             wavelet_coefficients = t.forward(segmentArray);
 
             // Set features 3-17 to wavelet coefficients
