@@ -22,6 +22,8 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        // Defining text fields for name, username, password and cpr number
+        // along with a register button and a progress bar
         final EditText etName = (EditText) findViewById(R.id.etName);
         final EditText etUsername = (EditText) findViewById(R.id.etUsername);
         final EditText etPassword = (EditText) findViewById(R.id.etPassword);
@@ -37,7 +39,8 @@ public class RegisterActivity extends AppCompatActivity {
         assert spinner != null;
 
 
-
+        // By clicking the register button, the user is registered in the Parse database with the
+        // typed information
         bRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,14 +50,17 @@ public class RegisterActivity extends AppCompatActivity {
                 final String password = etPassword.getText().toString();
                 final int CPR = Integer.parseInt(etCPR.getText().toString());
 
+                // Assigning username, password, name and cpr number to the user.
                 user.setUsername(username);
                 user.setPassword(password);
                 user.put("name", name);
                 user.put("CPR", CPR);
 
                 spinner.setVisibility(View.VISIBLE);
+                // Disable the button as long as the app sends the information to the Parse database.
                 bRegister.setEnabled(false);
 
+                //  If the registration is successful, the login screen is started
                 user.signUpInBackground(new SignUpCallback() {
                     public void done(ParseException e) {
                         if (e == null) {
@@ -75,8 +81,6 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                     }
                 });
-
-
             }
         });
     }

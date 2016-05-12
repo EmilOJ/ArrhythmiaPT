@@ -393,11 +393,12 @@ public class SignalProcessing {
     }
 
     private void save_classification(List<String> classification, List<Integer> qrs_loc) {
-        // INPUT:
-        //      - classification:    from classify_segments()
-        //      - qrs:               detected qrs locations
-        // Saves classification to database
+        /* Saves classification to database
 
+        INPUT
+        classification:    from classify_segments()
+        qrs:               detected qrs locations
+        */
         List<Arrhythmia> arrhythmias = extractArrhythmias(classification, qrs_loc);
 
         ParseObject.saveAllInBackground(arrhythmias);
@@ -501,7 +502,7 @@ public class SignalProcessing {
         List<Arrhythmia> arrhythmias = new ArrayList<>();
         List<Integer> cur_arrhythmias = new ArrayList<>();
         String arrhythmia;
-        boolean arrhythmia_found = true;
+        boolean arrhythmia_found = false;
         int i = 0;
         arrhythmia = "";
 
