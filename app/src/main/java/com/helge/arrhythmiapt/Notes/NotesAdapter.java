@@ -14,14 +14,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * Created by emil on 24/04/16.
- */
 public class NotesAdapter extends ParseQueryAdapter<ParseObject> {
+    /*
+        Loads Notes from Parse server and processes them for
+        displaying in NotesListActivity.
+        Extends the Parse API ParseQueryAdapter which makes getting
+        and displaying data from the database very simple.
+     */
 
     public NotesAdapter(Context context) {
         super(context, new ParseQueryAdapter.QueryFactory<ParseObject>() {
             public ParseQuery create() {
+                // Query database for all ECG recordings
                 ParseQuery query = new ParseQuery("Note");
                 query.fromLocalDatastore();
                 return query;
@@ -29,7 +33,7 @@ public class NotesAdapter extends ParseQueryAdapter<ParseObject> {
         });
     }
 
-    // Customize the layout by overriding getItemView
+    // Set and inflate each item on the list and set custom text (timestamp) and node content
     @Override
     public View getItemView(ParseObject object, View v, ViewGroup parent) {
         if (v == null) {
