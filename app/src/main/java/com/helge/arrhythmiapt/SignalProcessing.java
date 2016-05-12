@@ -66,7 +66,7 @@ public class SignalProcessing {
         List<String> classification;
 
         qrs_detected = detect_qrs();
-        qrs_loc = getQrsLoc(qrs_detected);
+        qrs_loc = getQRSLoc(qrs_detected);
 
         // High-pass filter signal
         filter_signal();
@@ -79,6 +79,7 @@ public class SignalProcessing {
 
         // Classify with support vector machine
         classification = classify_segments(all_features);
+
 
         // Save classification and mSignal to database
         save_classification(classification, qrs_loc);
@@ -200,8 +201,8 @@ public class SignalProcessing {
                             if (rr_cur < rr_tolerance_phys[0] || rr_cur > rr_tolerance_phys[1]) {
                                 rr_tolerance = rr_tolerance_phys;
                             } else {
-                                rr_tolerance[0] = rr_last * 0.1;
-                                rr_tolerance[1] = rr_last * 2;
+                                rr_tolerance[0] = rr_last * 0.5;
+                                rr_tolerance[1] = rr_last * 1.6;
                             }
 
                             // Set new max in buffer
@@ -262,7 +263,7 @@ public class SignalProcessing {
         return qrs_loc;
     }
 
-    private List<Integer> getQrsLoc(List<Integer> qrs) {
+    private List<Integer> getQRSLoc(List<Integer> qrs) {
         List<Integer> qrs_loc = new ArrayList<>();
         for (int i = 0; i < qrs.size(); i++) {
             if (qrs.get(i) == 1) {
@@ -404,7 +405,7 @@ public class SignalProcessing {
         ParseObject.saveAllInBackground(arrhythmias);
     }
 
-    public List<Double> filter(List<Double> signal, List<Double> b) {
+    private List<Double> filter(List<Double> signal, List<Double> b) {
         List<Double> _signal = signal;
         List<Double> _filtered_signal = new ArrayList<>();
         double lin_sum;
@@ -424,7 +425,7 @@ public class SignalProcessing {
         return _filtered_signal;
     }
 
-    public List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
+    private List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
         List<Double> _signal = signal;
 
         double lin_sum;
@@ -581,7 +582,7 @@ public class SignalProcessing {
 
     public int[] circshift(int[] array, int shift){
         int temp = array[array.length-1];
-        for (int i = 0; i < array.length-shift-1;i++){
+        for (int i = 0; i <= array.length-shift-1;i++){
             array[array.length-1-i] = array[array.length-i-2];
         }
         array[0] = temp;
@@ -590,7 +591,7 @@ public class SignalProcessing {
 
     public double[] circshift(double[] array){
         double temp = array[array.length-1];
-        for (int i = 0; i < array.length-2;i++){
+        for (int i = 0; i < array.length-1;i++){
             array[array.length-1-i] = array[array.length-i-2];
         }
         array[0] = temp;
@@ -603,11 +604,11 @@ public class SignalProcessing {
             double value = array.get(i);
             temp[i] = value;
         }
-        for (int i = 0; i < array.size()-shift-1;i++){
-            array.set(array.size()-1-i,array.get(array.size()-i-2));
+        for (int i = shift; i < array.size()-1;i++){
+            array.set(i-shift, array.get(i));
         }
-        for (int i = 0; i < temp.length; i++) {
-            array.add(temp[i]);
+        for (int i = 0; i < temp.length - 1; i++) {
+            array.set(array.size() - shift + i, temp[i]);
         }
 
         return array;

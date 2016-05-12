@@ -21,7 +21,7 @@ public class MainMenu extends AppCompatActivity {
      */
 
     private static Button notesButton;
-    private static Button qButton;
+    private static Button recordButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +40,8 @@ public class MainMenu extends AppCompatActivity {
 
         // Proxy button for displaying questions. This should in reality be implemented
         // as an AlarmManager so the questions will be displayed every 8 hours.
-        qButton = (Button) findViewById(R.id.questionButton);
-        qButton.setOnClickListener(new View.OnClickListener() {
+        recordButton = (Button) findViewById(R.id.questionButton);
+        recordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new AlertDialog.Builder(MainMenu.this)
