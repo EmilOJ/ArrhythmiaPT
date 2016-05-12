@@ -70,14 +70,6 @@ public class SignalProcessing {
     }
     // Final function output
 
-
-    //public int[] circshift(int[] last_qrs) {
-    //    for (int i = 0; i < last_qrs.length-1; i++) {
-    //        last_qrs[4-i] = last_qrs[3-i];
-    //    }
-    //    return last_qrs;
-    //}
-
     public static List<Double> demean(List<Double> m) {
         double mMean = mean(m);
         List<Double> dSignal = new ArrayList<>();
@@ -103,13 +95,12 @@ public class SignalProcessing {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
     }
 
     public void detect_and_classify() {
         List<Integer> qrs_detected;
         List<List<Double>> segments;
-        double[] features;
+        ////double[] features;
         ArrayList<ArrayList<Double>> all_features;
         int detected_qrs;
         List<Integer> qrs_loc;
@@ -131,17 +122,6 @@ public class SignalProcessing {
 
         // Save classification and mSignal to database
         save_classification(classification, qrs_loc);
-
-        // TODO: variable 'mSignal' must be emptied like below, so a new QRS detection can be performed,
-        // but the mSignal must also be saved to a variable with continuous ECG mSignal containing
-        // all three QRS complexes can be accessed. This is needed for RR interval computation.
-
-        // Empty mSignal variable
-        //this.mSignal = new ArrayList<Double>();
-
-
-        //}
-
     }
 
     private List<Integer> detect_qrs() {
@@ -171,15 +151,10 @@ public class SignalProcessing {
         int candidate_pos = 0;
         double candidate = 0;     // Candidate value
 
-        //float[] lowPass;
-        //float[] highPass;
-
         double[] rr_tolerance_phys = new double[2];
         rr_tolerance_phys[0] = 60.0 / 220 * FS;
         rr_tolerance_phys[1] = 60.0 / 40 * FS;
         double[] rr_tolerance = rr_tolerance_phys;
-
-        //ArrayList<Double>[] qrs_loc = new ArrayList<Double>[mSignal.length];
 
         List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
 
@@ -235,8 +210,7 @@ public class SignalProcessing {
 
             // Candidate QRS value is the maximum value and position from initial high threshold crossing to a refractory period after that
 
-            // Check if refractory period is over
-            // (If not, don't check for new QRS)
+            // Check if refractory period is over (If not, don't check for new QRS)
             time_since_last_qrs = i - last_qrs[0];
 
             if ((time_since_last_qrs > REFRACTORY_PERIOD) || first_candidate) {
