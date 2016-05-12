@@ -80,13 +80,12 @@ public class MainMenu extends AppCompatActivity {
 
 
 
-//        SignalProcessing signalProcessing = new SignalProcessing(this);
-//        try {
-//            signalProcessing.readECG();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        }
-//        signalProcessing.detect_and_classify();
+        SignalProcessing signalProcessing = new SignalProcessing(this);
+        try {
+            signalProcessing.readECG();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        signalProcessing.detect_and_classify();
     }
 }

@@ -537,9 +537,9 @@ delay - delay caused by filters (check with grpdelay function)
             }
             i++;
         }
-        if (cur_arrhythmias.size() > 0) {
-            arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
-        }
+        //if (cur_arrhythmias.size() > 0) {
+        //    arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
+        //}
         return arrhythmias;
     }
 
