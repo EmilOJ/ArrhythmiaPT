@@ -26,13 +26,12 @@ import jwave.transforms.wavelets.daubechies.Daubechies4;
 
 public class SignalProcessing {
 
-    static final int FS = 360; // Sample rate in Hz
-    static final int SEGMENT_LENGTH = (int) Math.floor((200.0 / 1000) * FS);
-    static final int REFRACTORY_PERIOD = (int) Math.floor((250.0 / 1000) * FS);
+    static final int FS                 = 360; // Sample rate in Hz
+    static final int SEGMENT_LENGTH     = (int) Math.floor((200.0 / 1000) * FS);
+    static final int REFRACTORY_PERIOD  = (int) Math.floor((250.0 / 1000) * FS);
     private static SVMStruct mSVMStruct_AF;
     final Context mContext;
-    public List<Double> mSignal = new ArrayList<>();
-    public ArrayList<ArrayList<Double>> mSegments = new ArrayList<>();
+    public List<Double> mSignal         = new ArrayList<>();
     ECGRecording mECGgRecording;
 
     public SignalProcessing(Context context) {
@@ -42,11 +41,13 @@ public class SignalProcessing {
 
     public void readECG() throws IOException {
 
-        //The file is saved in the internal storage, and is found as such:
+        //The CSV file is read and converted to a byte array, which can readily be stored in the
+        // database as a ParseFile
         InputStream is = mContext.getResources().openRawResource(R.raw.samples);
         byte[] data = ByteStreams.toByteArray(is);
         mECGgRecording = new ECGRecording();
         mECGgRecording.setData(new ParseFile("data.csv", data));
+
         mECGgRecording.setFs(360);
         mECGgRecording.setDownSamplingRate(5);
 
@@ -60,14 +61,13 @@ public class SignalProcessing {
     public void detect_and_classify() {
         List<Integer> qrs_detected;
         List<List<Double>> segments;
-        ////double[] features;
         ArrayList<ArrayList<Double>> all_features;
-        int detected_qrs;
         List<Integer> qrs_loc;
         List<String> classification;
 
         qrs_detected = detect_qrs();
         qrs_loc = getQrsLoc(qrs_detected);
+
         // High-pass filter signal
         filter_signal();
 
@@ -85,17 +85,10 @@ public class SignalProcessing {
     }
 
     private List<Integer> detect_qrs() {
-/* QRS Detection Function
-This is a starting point including the filtering stages for a QRS algorithm.
-The b and a parameters are meant for 4 filtering stages, and can be found using the fdatool in Matlab.
-
-INPUT
-ecg - ECG signal for QRS detection
-b_low - FIR low pass b filtering coefficients
-b_high - FIR high pass b filtering coefficients
-b_avg - averaging filter coefficients
-delay - delay caused by filters (check with grpdelay function)
-*/
+    /* QRS detection function
+    This method detects the location of the QRS complexes and returns an array with
+    1's at all locations with QRS, and 0's at all other locations.
+    */
         mSignal = mECGgRecording.getData();
         int org_length = mSignal.size();
 
@@ -198,8 +191,7 @@ delay - delay caused by filters (check with grpdelay function)
                             last_qrs = circshift(last_qrs, 1);
                             last_qrs[0] = candidate_pos;
 
-                            // Save RR-interval of last 5 qrs and use it to
-                            // define search window
+                            // Save RR-interval of last 5 qrs and use it to define search window
                             rr = diff(last_qrs);
                             rr = neglectZeros(rr);
                             rr = abs(rr);
@@ -267,11 +259,6 @@ delay - delay caused by filters (check with grpdelay function)
 
             i = i + 1;
         }
-        // Let us print all the elements available in list
-        for (Double number : h_thres_array) {
-            System.out.println("H_thres_array = " + number);
-        }
-
         return qrs_loc;
     }
 
@@ -299,9 +286,9 @@ delay - delay caused by filters (check with grpdelay function)
     private List<List<Double>> segments_around_qrs(List<Integer> qrsloc) {
         /*
         INPUT
-        mSignal:   filtered mSignal from detect_qrs()
+        qrsloc:   array of QRS complex locations (1=QRS , 0=no QRS)
         OUTPUT
-        mSegments:  mSegments consisting of ±200 ms around each QRS complex
+        segments:  consists of ±200 ms around each QRS complex
         */
         List<List<Double>> segments = new ArrayList<>();
 
@@ -320,22 +307,19 @@ delay - delay caused by filters (check with grpdelay function)
 
                 segments.add(segment);
             }
-
         }
-
         return segments;
     }
 
 
     private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, List<Integer> qrs_loc) {
-        /*
+        /* This method
         INPUT
-        mSegments:  Segmented mSignal from segments_around_qrs()
-        mQrs:  Segmented mSignal from segments_around_qrs()
-        mSignal:  Segmented mSignal from segments_around_qrs()
+        segments:  segmented mSignal from segments_around_qrs()
+        qrs_loc:  segmented mSignal from segments_around_qrs()
 
         OUTPUT
-        features: Computed feature vector
+        all_features: 2D array with computed features
         */
         ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
 
@@ -344,10 +328,9 @@ delay - delay caused by filters (check with grpdelay function)
 
         for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
             // Only use middle segment
-            List<Double> segment = segments.get(iSegment);
             double[] segmentArray = Doubles.toArray(segments.get(iSegment));
 
-            double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
+            double K = 300; //Estimate, since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1: RR feature
             features.add(K / rr_intervals.get(iSegment - 1));
@@ -364,11 +347,8 @@ delay - delay caused by filters (check with grpdelay function)
             for (int i = 2; i < 17; i++) {
                 features.add(wavelet_coefficients[i-2]);
             }
-
             all_features.add(features);
         }
-
-
         return all_features;
     }
 
@@ -401,10 +381,10 @@ delay - delay caused by filters (check with grpdelay function)
                 c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
             }
 
-            if (c > 0) { // TODO: skal c1 være over eller under 0?
+            if (c < 0) { // TODO: skal c1 være over eller under 0?
                 group_belonging = "AF";
             } else {
-                group_belonging = "N"; // TODO: ??
+                group_belonging = "N";
             }
             classification.add(group_belonging);
         }
@@ -657,7 +637,6 @@ delay - delay caused by filters (check with grpdelay function)
         }
         return sum / m.size();
     }
-    // Final function output // TODO
 
     public static List<Double> demean(List<Double> m) {
         double mMean = mean(m);
