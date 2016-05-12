@@ -326,20 +326,20 @@ public class SignalProcessing {
         */
         ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
 
-        ArrayList<Double> features = new ArrayList<>();
+        ArrayList<Double> features;
         List<Integer> rr_intervals = compute_RR(qrs_loc);
 
-        for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
-            features.clear();
+        for (int iSegment = 0; iSegment < segments.size() - 1; iSegment++) {
+            features = new ArrayList<>();
             // Only use middle segment
             double[] segmentArray = Doubles.toArray(segments.get(iSegment));
 
             double K = 300; //Estimate, since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1: RR feature
-            features.add((double) rr_intervals.get(iSegment));
+            features.add((double) rr_intervals.get(iSegment + 1));
             // Feature 2: RR feature
-            features.add((double) rr_intervals.get(iSegment - 1));
+            features.add((double) rr_intervals.get(iSegment));
 
             // Feature 3-17: JWave feature
             // Implement wavelet transform from JWave.
