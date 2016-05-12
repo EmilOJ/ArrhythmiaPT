@@ -18,6 +18,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.io.IOException;
 import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
@@ -75,6 +76,13 @@ public class LoginActivity extends AppCompatActivity {
         // Fetch notes from Parse server in background and save locally
         fetchNotes();
 
+        SignalProcessing signalProcessing = new SignalProcessing(this);
+        try {
+            signalProcessing.readECG();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        signalProcessing.detect_and_classify();
     }
 
     // Fetch notes from database
@@ -99,4 +107,6 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent("doneFetchingData");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
+
+
 }

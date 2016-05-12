@@ -92,12 +92,6 @@ public class MainMenu extends AppCompatActivity {
         // Simulation of recording the signal. This creates an instance of the signal
         // processing class which reads a signal from a local csv file and run the
         // detection algorithm.
-        SignalProcessing signalProcessing = new SignalProcessing(this);
-        try {
-            signalProcessing.readECG();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        signalProcessing.detect_and_classify();
+
     }
 }

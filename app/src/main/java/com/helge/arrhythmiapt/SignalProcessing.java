@@ -91,7 +91,8 @@ public class SignalProcessing {
     1's at all locations with QRS, and 0's at all other locations.
     */
         mSignal = mECGgRecording.getData();
-        int org_length = mSignal.size();
+        List<Double> _signal = new ArrayList<>(mSignal);
+        int org_length = _signal.size();
 
         // Important Values
         int window                  = 2 * FS;   // 2 second window
@@ -109,9 +110,9 @@ public class SignalProcessing {
         rr_tolerance_phys[1]        = 60.0 / 40 * FS;
         double[] rr_tolerance       = rr_tolerance_phys;
 
-        List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
+        List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(_signal.size(), 0));
 
-        double[] h_thres_array      = new double[mSignal.size()];
+        double[] h_thres_array      = new double[_signal.size()];
         boolean first_candidate     = true;
 
 
@@ -133,23 +134,23 @@ public class SignalProcessing {
         List<Double> b_avg = new ArrayList<>(Arrays.asList(0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625));
 
         // Lowpass Filter
-        mSignal = filter(mSignal, b_low);
+        _signal = filter(_signal, b_low);
 
         // Highpass Filter
-        mSignal = filter(mSignal, b_high);
+        _signal = filter(_signal, b_high);
 
         // Subtract mean
-        mSignal = demean(mSignal);
+        _signal = demean(_signal);
 
         // Absolute
-        mSignal = abs(mSignal);
+        _signal = abs(_signal);
 
         // Average
-        mSignal = filter(mSignal, b_avg);
+        _signal = filter(_signal, b_avg);
 
         // Correct for filter delay
         int delay = 59;
-        mSignal = circshift(mSignal,delay);
+        _signal = circshift(_signal,delay);
 
         /* QRS detection*/
         int i = 0;
@@ -158,8 +159,8 @@ public class SignalProcessing {
         while (i < org_length) {
 
             // Check for new window max
-            if (mSignal.get(i) > window_max) {
-                window_max = mSignal.get(i);
+            if (_signal.get(i) > window_max) {
+                window_max = _signal.get(i);
             }
 
             // Candidate QRS value is the maximum value and position from initial high threshold crossing to a refractory period after that
@@ -225,8 +226,8 @@ public class SignalProcessing {
                                 first_candidate = false;
                             }
                         }
-                    } else if (mSignal.get(i) > candidate) {
-                        candidate = mSignal.get(i);
+                    } else if (_signal.get(i) > candidate) {
+                        candidate = _signal.get(i);
                         candidate_pos = i;
                     }
 
@@ -242,9 +243,9 @@ public class SignalProcessing {
                     window_max = 0;
                 } else {
                     // Check if high threshold is surpassed
-                    if (mSignal.get(i) > h_thresh) {
+                    if (_signal.get(i) > h_thresh) {
                         // Make this position the first candidate value
-                        candidate = mSignal.get(i);
+                        candidate = _signal.get(i);
                         candidate_pos = i;
                         candidate_detected = true;
                         // Set candidate search to refractory period from current candidate.
@@ -260,6 +261,7 @@ public class SignalProcessing {
 
             i = i + 1;
         }
+        _signal = _signal;
         return qrs_loc;
     }
 
@@ -328,15 +330,16 @@ public class SignalProcessing {
         List<Integer> rr_intervals = compute_RR(qrs_loc);
 
         for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
+            features.clear();
             // Only use middle segment
             double[] segmentArray = Doubles.toArray(segments.get(iSegment));
 
             double K = 300; //Estimate, since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1: RR feature
-            features.add(K / rr_intervals.get(iSegment - 1));
+            features.add((double) rr_intervals.get(iSegment));
             // Feature 2: RR feature
-            features.add(K / rr_intervals.get(iSegment));
+            features.add((double) rr_intervals.get(iSegment - 1));
 
             // Feature 3-17: JWave feature
             // Implement wavelet transform from JWave.
@@ -426,7 +429,7 @@ public class SignalProcessing {
     }
 
     private List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
-        List<Double> _signal = signal;
+        List<Double> _signal = new ArrayList<>(signal);
 
         double lin_sum;
         int b_order = b.size();
@@ -435,7 +438,8 @@ public class SignalProcessing {
         for (int times = 0; times < 2; times++) {
             List<Double> _filtered_signal = new ArrayList<>();
 
-            for (int i = 0; i < b_order; i++) {
+
+            for (int i = 0; i < b_order - 1; i++) {
                 _signal.add(0, 0.0);
             }
             for (int i = 0; i < a_order; i++) {
@@ -443,25 +447,21 @@ public class SignalProcessing {
             }
 
 
-            for (int i = b_order; i < _signal.size(); i++) {
+            for (int i = b_order - 1; i < _signal.size(); i++) {
                 lin_sum = 0;
                 for (int j = 0; j < b_order; j++) {
                     lin_sum += b.get(j) * _signal.get(i - j);
                 }
                 for (int j = 1; j < a_order; j++) {
-                    try {
-                        lin_sum -= a.get(j) * _filtered_signal.get(i - j);
-                    } catch (Exception e) {
-                        Log.d("Test", "test");
-                    }
-
-
+                    lin_sum -= a.get(j) * _filtered_signal.get(i - j);
                 }
                 _filtered_signal.add(lin_sum);
             }
 
             Collections.reverse(_filtered_signal);
-            _signal = _filtered_signal;
+            _signal = new ArrayList<>(_filtered_signal);
+            _signal.remove(_signal.size() - 1);
+            _signal.remove(_signal.size() - 1);
 
         }
 
