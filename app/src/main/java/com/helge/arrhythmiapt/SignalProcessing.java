@@ -40,44 +40,6 @@ public class SignalProcessing {
         mSVMStruct_AF = new SVMStruct(mContext, "af");
     }
 
-    // TODO: check sorting is correct...
-    public static double median(double[] m) {
-        int middle = m.length / 2;
-        java.util.Arrays.sort(m);
-        if (m.length % 2 == 1) {
-            return m[middle];
-        } else {
-            return (m[middle - 1] + m[middle]) / 2.0;
-        }
-    }
-
-    // http://stackoverflow.com/questions/4191687/how-to-calculate-mean-median-mode-and-range-from-a-set-of-numbers :
-    // http://stackoverflow.com/questions/8835464/qrs-detection-in-java-from-ecg-byte-array
-    public static double mean(int[] m) {
-        double sum = 0;
-        for (int i = 0; i < m.length; i++) {
-            sum += m[i];
-        }
-        return sum / m.length;
-    }
-
-    public static double mean(List<Double> m) {
-        double sum = 0;
-        for (int i = 0; i < m.size(); i++) {
-            sum += m.get(i);
-        }
-        return sum / m.size();
-    }
-    // Final function output
-
-    public static List<Double> demean(List<Double> m) {
-        double mMean = mean(m);
-        List<Double> dSignal = new ArrayList<>();
-        for (int i = 0; i < m.size(); i++) {
-            dSignal.add(m.get(i) - mMean);
-        }
-        return dSignal;
-    }
 
     public void readECG() throws IOException {
 
@@ -319,6 +281,276 @@ public class SignalProcessing {
         return qrs_loc;
     }
 
+    private List<Integer> getQrsLoc(List<Integer> qrs) {
+        List<Integer> qrs_loc = new ArrayList<>();
+        for (int i = 0; i < qrs.size(); i++) {
+            if (qrs.get(i) == 1) {
+                qrs_loc.add(i);
+            }
+        }
+        return qrs_loc;
+    }
+    private void filter_signal() {
+        List<Double> a = new ArrayList<>();
+        a.add(1.0);
+        a.add(-0.97);
+
+        List<Double> b = new ArrayList<>();
+        b.add(1.0);
+        b.add(-1.0);
+
+        mSignal = filtfilt(mSignal, b, a);
+    }
+
+    private List<List<Double>> segments_around_qrs(List<Integer> qrsloc) {
+        // INPUT:
+        //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
+        // OUTPUT:
+        //      - mSegments:  mSegments consisting of ±200 ms around each QRS complex
+
+        List<List<Double>> segments = new ArrayList<>();
+
+        List segment;
+        int pre_qrs, post_qrs, cur_qrs;
+
+
+        for (int j = 0; j < qrsloc.size(); j++) {
+            // Find sample index for segment
+            cur_qrs = qrsloc.get(j);
+            if (cur_qrs >= SEGMENT_LENGTH && cur_qrs < cur_qrs + SEGMENT_LENGTH) {
+                pre_qrs = cur_qrs - SEGMENT_LENGTH;
+                post_qrs = cur_qrs + SEGMENT_LENGTH;
+
+                segment = mSignal.subList(pre_qrs, post_qrs);
+
+                segments.add(segment);
+            }
+
+        }
+
+        return segments;
+    }
+
+
+    private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, List<Integer> qrs_loc) {
+        // INPUT:
+        //      - mSegments:  Segmented mSignal from segments_around_qrs()
+        //      - mQrs:  Segmented mSignal from segments_around_qrs()
+        //      - mSignal:  Segmented mSignal from segments_around_qrs()
+        // OUTPUT:
+        //      - features: Computed feature vector
+
+        ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
+
+        ArrayList<Double> features = new ArrayList<>();
+        List<Integer> rr_intervals = compute_RR(qrs_loc);
+
+        for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
+            // Only use middle segment
+            List<Double> segment = segments.get(iSegment);
+            double[] segmentArray = Doubles.toArray(segments.get(iSegment));
+
+            double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
+
+            // Feature 1
+            features.add(K / rr_intervals.get(iSegment - 1));
+            // Feature 2
+            features.add(K / rr_intervals.get(iSegment));
+
+            // Feature 3-17
+            // Implement wavelet transform from Jwave.
+            double[] wavelet_coefficients;
+            Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new Daubechies4())));
+            wavelet_coefficients = t.forward(segmentArray);
+
+            // Set features 3-17 to wavelet coefficients
+            for (int i = 2; i < 17; i++) {
+                features.add(wavelet_coefficients[i-2]);
+            }
+
+            all_features.add(features);
+        }
+
+
+        return all_features;
+    }
+
+    private List<String> classify_segments(ArrayList<ArrayList<Double>> all_features) {
+        // INPUT:
+        //      - segments:
+        //      - features:
+        // OUTPUT:
+        //      - segments:  The three segments consisting of ±200 ms around each QRS complex
+
+        ArrayList<String> classification = new ArrayList<String>();
+        String group_belonging;
+
+
+        // classify each segment
+        for (int i = 0; i < all_features.size(); i++) {
+
+            double[] cur_features = new double[17];
+
+            cur_features = Doubles.toArray(all_features.get(i));
+
+            // Estimate degree of belonging to AF group
+            int c = 0;
+            double bias2 = mSVMStruct_AF.getBias();
+            double[] alpha2 = mSVMStruct_AF.getAlpha();
+            double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
+            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
+                c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+            }
+
+            if (c > 0) { // TODO: skal c1 være over eller under 0?
+                group_belonging = "AF";
+            } else {
+                group_belonging = "N"; // TODO: ??
+            }
+            classification.add(group_belonging);
+        }
+
+        return classification;
+    }
+
+    private void save_classification(List<String> classification, List<Integer> qrs_loc) {
+        // INPUT:
+        //      - classification:    from classify_segments()
+        //      - qrs:               detected qrs locations
+        // Saves classification to database
+
+        List<Arrhythmia> arrhythmias = extractArrhythmias(classification, qrs_loc);
+
+        ParseObject.saveAllInBackground(arrhythmias);
+    }
+
+    public List<Double> filter(List<Double> signal, List<Double> b) {
+        List<Double> _signal = signal;
+        List<Double> _filtered_signal = new ArrayList<>();
+        double lin_sum;
+        int filter_order = b.size();
+        for (int i = 0; i < filter_order; i++) {
+            _signal.add(0,0.0);
+        }
+
+        for (int i = filter_order;i<_signal.size();i++){
+            lin_sum = 0;
+            for (int j = 0; j < filter_order; j++) {
+                lin_sum += b.get(j) * _signal.get(i - j);
+            }
+            _filtered_signal.add(lin_sum);
+        }
+
+        return _filtered_signal;
+    }
+
+    public List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
+        List<Double> _signal = signal;
+
+        double lin_sum;
+        int b_order = b.size();
+        int a_order = a.size();
+
+        for (int times = 0; times < 2; times++) {
+            List<Double> _filtered_signal = new ArrayList<>();
+
+            for (int i = 0; i < b_order; i++) {
+                _signal.add(0, 0.0);
+            }
+            for (int i = 0; i < a_order; i++) {
+                _filtered_signal.add(0.0);
+            }
+
+
+            for (int i = b_order; i < _signal.size(); i++) {
+                lin_sum = 0;
+                for (int j = 0; j < b_order; j++) {
+                    lin_sum += b.get(j) * _signal.get(i - j);
+                }
+                for (int j = 1; j < a_order; j++) {
+                    try {
+                        lin_sum -= a.get(j) * _filtered_signal.get(i - j);
+                    } catch (Exception e) {
+                        Log.d("Test", "test");
+                    }
+
+
+                }
+                _filtered_signal.add(lin_sum);
+            }
+
+            Collections.reverse(_filtered_signal);
+            _signal = _filtered_signal;
+
+        }
+
+        return _signal;
+    }
+//
+
+    private List<Integer> compute_RR(List<Integer> qrs_loc) {
+        // INPUT:
+        //      - qrs_loc:  qrs locations in samples
+        // OUTPUT:
+        //      - rr_intervals: computed RR-intervals in samples
+        List<Integer> rr_intervals = new ArrayList<Integer>();
+
+        for (int i = 0; i <= qrs_loc.size() - 2; i++) {
+            rr_intervals.add(Math.abs(qrs_loc.get(i + 1) - qrs_loc.get(i)));
+        }
+
+        return rr_intervals;
+    }
+
+
+
+    private double innerProduct(double[] a, double[] b) {
+
+        double product = 0;
+        for (int i = 0; i < a.length - 1; i++) {
+            product += a[i] * b[i];
+        }
+
+        return product;
+    }
+
+    private List<Arrhythmia> extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs_loc) {
+
+        List<Arrhythmia> arrhythmias = new ArrayList<>();
+        List<Integer> cur_arrhythmias = new ArrayList<>();
+        String arrhythmia;
+        boolean arrhythmia_found = true;
+        int i = 0;
+        arrhythmia = "";
+
+        while (i < detected_arrhythmias.size()) {
+            arrhythmia = detected_arrhythmias.get(i);
+            if (!arrhythmia.equals("N")) {
+                arrhythmia_found = true;
+                cur_arrhythmias.add(i);
+            } else if (arrhythmia_found) {
+                arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
+                arrhythmia_found = false;
+                cur_arrhythmias.clear();
+            }
+            i++;
+        }
+        if (cur_arrhythmias.size() > 0) {
+            arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
+        }
+        return arrhythmias;
+    }
+
+    private Arrhythmia computeArrhythmiaTimes(List<Integer> arrythmia_index, List<Integer> qrs_loc, String type) {
+        int start = qrs_loc.get(arrythmia_index.get(0));
+        int stop = qrs_loc.get(arrythmia_index.get(arrythmia_index.size() - 1));
+        Arrhythmia a = new Arrhythmia(start, stop);
+        a.setRecordingId(mECGgRecording.getObjectId());
+        a.setType(type);
+
+        return a;
+    }
+
     public int[] diff(int[] last_qrs) {
         int[] rr = new int[4];
         for (int i = 0; i < last_qrs.length-1; i++) {
@@ -397,287 +629,43 @@ public class SignalProcessing {
 
         return array;
     }
-
-    public List<Double> filter(List<Double> signal, List<Double> b) {
-        List<Double> _signal = signal;
-        List<Double> _filtered_signal = new ArrayList<>();
-        double lin_sum;
-        int filter_order = b.size();
-        for (int i = 0; i < filter_order; i++) {
-            _signal.add(0,0.0);
+    // TODO: check sorting is correct...
+    public static double median(double[] m) {
+        int middle = m.length / 2;
+        java.util.Arrays.sort(m);
+        if (m.length % 2 == 1) {
+            return m[middle];
+        } else {
+            return (m[middle - 1] + m[middle]) / 2.0;
         }
-
-        for (int i = filter_order;i<_signal.size();i++){
-            lin_sum = 0;
-            for (int j = 0; j < filter_order; j++) {
-                lin_sum += b.get(j) * _signal.get(i - j);
-            }
-            _filtered_signal.add(lin_sum);
-        }
-
-        return _filtered_signal;
     }
 
-    public List<Double> filtfilt(List<Double> signal, List<Double> b, List<Double> a) {
-        List<Double> _signal = signal;
-
-        double lin_sum;
-        int b_order = b.size();
-        int a_order = a.size();
-
-        for (int times = 0; times < 2; times++) {
-            List<Double> _filtered_signal = new ArrayList<>();
-
-            for (int i = 0; i < b_order; i++) {
-                _signal.add(0, 0.0);
-            }
-            for (int i = 0; i < a_order; i++) {
-                _filtered_signal.add(0.0);
-            }
-
-
-            for (int i = b_order; i < _signal.size(); i++) {
-                lin_sum = 0;
-                for (int j = 0; j < b_order; j++) {
-                    lin_sum += b.get(j) * _signal.get(i - j);
-                }
-                for (int j = 1; j < a_order; j++) {
-                    try {
-                        lin_sum -= a.get(j) * _filtered_signal.get(i - j);
-                    } catch (Exception e) {
-                        Log.d("Test", "test");
-                    }
-
-
-                }
-                _filtered_signal.add(lin_sum);
-            }
-
-            Collections.reverse(_filtered_signal);
-            _signal = _filtered_signal;
-
+    // http://stackoverflow.com/questions/4191687/how-to-calculate-mean-median-mode-and-range-from-a-set-of-numbers :
+    // http://stackoverflow.com/questions/8835464/qrs-detection-in-java-from-ecg-byte-array
+    public static double mean(int[] m) {
+        double sum = 0;
+        for (int i = 0; i < m.length; i++) {
+            sum += m[i];
         }
-
-        return _signal;
+        return sum / m.length;
     }
 
-
-
-    private List<List<Double>> segments_around_qrs(List<Integer> qrsloc) {
-        // INPUT:
-        //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
-        // OUTPUT:
-        //      - mSegments:  mSegments consisting of ±200 ms around each QRS complex
-
-        List<List<Double>> segments = new ArrayList<>();
-
-        List segment;
-        int pre_qrs, post_qrs, cur_qrs;
-
-
-        for (int j = 0; j < qrsloc.size(); j++) {
-            // Find sample index for segment
-            cur_qrs = qrsloc.get(j);
-            if (cur_qrs >= SEGMENT_LENGTH && cur_qrs < cur_qrs + SEGMENT_LENGTH) {
-                pre_qrs = cur_qrs - SEGMENT_LENGTH;
-                post_qrs = cur_qrs + SEGMENT_LENGTH;
-
-                segment = mSignal.subList(pre_qrs, post_qrs);
-
-                segments.add(segment);
-            }
-
+    public static double mean(List<Double> m) {
+        double sum = 0;
+        for (int i = 0; i < m.size(); i++) {
+            sum += m.get(i);
         }
-
-        return segments;
+        return sum / m.size();
     }
+    // Final function output // TODO
 
-
-//
-private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, List<Integer> qrs_loc) {
-        // INPUT:
-        //      - mSegments:  Segmented mSignal from segments_around_qrs()
-        //      - mQrs:  Segmented mSignal from segments_around_qrs()
-        //      - mSignal:  Segmented mSignal from segments_around_qrs()
-        // OUTPUT:
-        //      - features: Computed feature vector
-
-    ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
-
-    ArrayList<Double> features = new ArrayList<>();
-    List<Integer> rr_intervals = compute_RR(qrs_loc);
-
-        for (int iSegment = 1; iSegment < segments.size() - 1; iSegment++) {
-            // Only use middle segment
-            List<Double> segment = segments.get(iSegment);
-            double[] segmentArray = Doubles.toArray(segments.get(iSegment));
-
-            double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
-
-            // Feature 1
-            features.add(K / rr_intervals.get(iSegment - 1));
-            // Feature 2
-            features.add(K / rr_intervals.get(iSegment));
-
-            // Feature 3-17
-            // Implement wavelet transform from Jwave.
-            double[] wavelet_coefficients;
-            Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new Daubechies4())));
-            wavelet_coefficients = t.forward(segmentArray);
-
-            // Set features 3-17 to wavelet coefficients
-            for (int i = 2; i < 17; i++) {
-                features.add(wavelet_coefficients[i-2]);
-            }
-
-            all_features.add(features);
+    public static List<Double> demean(List<Double> m) {
+        double mMean = mean(m);
+        List<Double> dSignal = new ArrayList<>();
+        for (int i = 0; i < m.size(); i++) {
+            dSignal.add(m.get(i) - mMean);
         }
-
-
-        return all_features;
-    }
-
-    private List<Integer> compute_RR(List<Integer> qrs_loc) {
-        // INPUT:
-        //      - qrs_loc:  qrs locations in samples
-        // OUTPUT:
-        //      - rr_intervals: computed RR-intervals in samples
-        List<Integer> rr_intervals = new ArrayList<Integer>();
-
-        for (int i = 0; i <= qrs_loc.size() - 2; i++) {
-            rr_intervals.add(Math.abs(qrs_loc.get(i + 1) - qrs_loc.get(i)));
-        }
-
-        return rr_intervals;
-    }
-
-    private List<String> classify_segments(ArrayList<ArrayList<Double>> all_features) {
-        // INPUT:
-        //      - segments:
-        //      - features:
-        // OUTPUT:
-        //      - segments:  The three segments consisting of ±200 ms around each QRS complex
-
-        ArrayList<String> classification = new ArrayList<String>();
-        String group_belonging;
-
-
-        // classify each segment
-        for (int i = 0; i < all_features.size(); i++) {
-
-            double[] cur_features = new double[17];
-
-            cur_features = Doubles.toArray(all_features.get(i));
-
-            // Estimate degree of belonging to AF group
-            int c = 0;
-            double bias2 = mSVMStruct_AF.getBias();
-            double[] alpha2 = mSVMStruct_AF.getAlpha();
-            double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
-            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
-                c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
-            }
-
-            if (c > 0) { // TODO: skal c1 være over eller under 0?
-                group_belonging = "AF";
-            } else {
-                group_belonging = "N"; // TODO: ??
-            }
-            classification.add(group_belonging);
-        }
-
-        return classification;
-    }
-
-    private double innerProduct(double[] a, double[] b) {
-
-        double product = 0;
-        for (int i = 0; i < a.length - 1; i++) {
-            product += a[i] * b[i];
-        }
-
-        return product;
-    }
-
-
-    private void save_classification(List<String> classification, List<Integer> qrs_loc) {
-        // INPUT:
-        //      - classification:    from classify_segments()
-        //      - qrs:               detected qrs locations
-        // Saves classification to database
-
-        List<Arrhythmia> arrhythmias = extractArrhythmias(classification, qrs_loc);
-
-        ParseObject.saveAllInBackground(arrhythmias);
-    }
-
-    private double[] asArray(ArrayList<Double> arrayList) {
-
-        double[] doubleArray = new double[arrayList.size()]; //create an array with the size of the mSegments
-
-        for (int i = 0; i < mSegments.size(); i++) {
-            doubleArray[i] = arrayList.get(i);
-        }
-        return doubleArray;
-    }
-
-    private void filter_signal() {
-        List<Double> a = new ArrayList<>();
-        a.add(1.0);
-        a.add(-0.97);
-
-        List<Double> b = new ArrayList<>();
-        b.add(1.0);
-        b.add(-1.0);
-
-        mSignal = filtfilt(mSignal, b, a);
-    }
-
-    private Arrhythmia computeArrhythmiaTimes(List<Integer> arrythmia_index, List<Integer> qrs_loc, String type) {
-        int start = qrs_loc.get(arrythmia_index.get(0));
-        int stop = qrs_loc.get(arrythmia_index.get(arrythmia_index.size() - 1));
-        Arrhythmia a = new Arrhythmia(start, stop);
-        a.setRecordingId(mECGgRecording.getObjectId());
-        a.setType(type);
-
-        return a;
-    }
-
-    private List<Arrhythmia> extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs_loc) {
-
-        List<Arrhythmia> arrhythmias = new ArrayList<>();
-        List<Integer> cur_arrhythmias = new ArrayList<>();
-        String arrhythmia;
-        boolean arrhythmia_found = true;
-        int i = 0;
-        arrhythmia = "";
-
-        while (i < detected_arrhythmias.size()) {
-            arrhythmia = detected_arrhythmias.get(i);
-            if (!arrhythmia.equals("N")) {
-                arrhythmia_found = true;
-                cur_arrhythmias.add(i);
-            } else if (arrhythmia_found) {
-                arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
-                arrhythmia_found = false;
-                cur_arrhythmias.clear();
-            }
-            i++;
-        }
-        if (cur_arrhythmias.size() > 0) {
-            arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
-        }
-        return arrhythmias;
-    }
-
-    private List<Integer> getQrsLoc(List<Integer> qrs) {
-        List<Integer> qrs_loc = new ArrayList<>();
-        for (int i = 0; i < qrs.size(); i++) {
-            if (qrs.get(i) == 1) {
-                qrs_loc.add(i);
-            }
-        }
-
-        return qrs_loc;
+        return dSignal;
     }
 }
+
