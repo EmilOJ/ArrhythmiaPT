@@ -12,6 +12,7 @@ public class ArrhythmiaPTApplication extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // Initializes the database and registers Arrhythmia and ECGRecording as ParseObjects
         ParseObject.registerSubclass(Arrhythmia.class);
         ParseObject.registerSubclass(ECGRecording.class);
         Parse.enableLocalDatastore(getApplicationContext());
