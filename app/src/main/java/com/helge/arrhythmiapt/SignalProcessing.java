@@ -40,17 +40,15 @@ public class SignalProcessing {
         mSVMStruct_AF = new SVMStruct(mContext, "af");
     }
 
-
     public void readECG() throws IOException {
 
-        //The file is saved in the internal storage , and is found as such:
+        //The file is saved in the internal storage, and is found as such:
         InputStream is = mContext.getResources().openRawResource(R.raw.samples);
         byte[] data = ByteStreams.toByteArray(is);
         mECGgRecording = new ECGRecording();
         mECGgRecording.setData(new ParseFile("data.csv", data));
         mECGgRecording.setFs(360);
         mECGgRecording.setDownSamplingRate(5);
-
 
         try {
             mECGgRecording.save();
@@ -87,56 +85,55 @@ public class SignalProcessing {
     }
 
     private List<Integer> detect_qrs() {
-//------------------QRS Detection Function---------------------------------%
-//- This is a starting point including the filtering stages for a QRS
-//algorithm. The b and a parameters are meant for 4 filtering stages, and
-//can be found using the fdatool in Matlab.
+/* QRS Detection Function
+This is a starting point including the filtering stages for a QRS algorithm.
+The b and a parameters are meant for 4 filtering stages, and can be found using the fdatool in Matlab.
 
-//INPUT
-// --- ecg - ECG signal for QRS detection
-// --- b_low - FIR low pass b filtering coefficients
-// --- b_high - FIR high pass b filtering coefficients
-// --- b_avg - averaging filter coefficients
-// --- delay - delay caused by filters (check with grpdelay function)
-
-        //public void QRS_detection( double[] ecg, double[] b_low, double[] b_high,int b_avg, int delay) { //outputs: qrs, h_thres_array, ecg
-
+INPUT
+ecg - ECG signal for QRS detection
+b_low - FIR low pass b filtering coefficients
+b_high - FIR high pass b filtering coefficients
+b_avg - averaging filter coefficients
+delay - delay caused by filters (check with grpdelay function)
+*/
         mSignal = mECGgRecording.getData();
         int org_length = mSignal.size();
+
         // Important Values
-        int window = 2 * FS; // 2 second window
-        double h_thresh = 0; // initial value of h_thresh
-        double h_thresh_correct = 0.7; // correction value for h_thresh
+        int window                  = 2 * FS;   // 2 second window
+        double h_thresh             = 0;        // initial value of h_thresh
+        double h_thresh_correct     = 0.7;      // correction value for h_thresh
 
         // Detecting candidate
-        boolean candidate_detected = false;
-        int candidate_pos = 0;
-        double candidate = 0;     // Candidate value
+        boolean candidate_detected  = false;
+        int candidate_pos           = 0;
+        double candidate            = 0;        // Candidate value
 
-        double[] rr_tolerance_phys = new double[2];
-        rr_tolerance_phys[0] = 60.0 / 220 * FS;
-        rr_tolerance_phys[1] = 60.0 / 40 * FS;
-        double[] rr_tolerance = rr_tolerance_phys;
+        // Setting the physical tolerance
+        double[] rr_tolerance_phys  = new double[2];
+        rr_tolerance_phys[0]        = 60.0 / 220 * FS;
+        rr_tolerance_phys[1]        = 60.0 / 40 * FS;
+        double[] rr_tolerance       = rr_tolerance_phys;
 
         List<Integer> qrs_loc = new ArrayList<Integer>(Collections.nCopies(mSignal.size(), 0));
 
-        double[] h_thres_array = new double[mSignal.size()];
-        boolean first_candidate = true;
+        double[] h_thres_array      = new double[mSignal.size()];
+        boolean first_candidate     = true;
 
 
-        //Keeping track of maximum values in last 5 windows
-        double[] window_max_buff = new double[5];
-        double window_max = 0;
-        int[] last_qrs = new int[5];
+        // Keeping track of maximum values in last 5 windows
+        double[] window_max_buff    = new double[5];
+        double window_max           = 0;
+        int[] last_qrs              = new int[5];
 
         int time_since_last_qrs;
-        int end_cand_search = -1;
+        int end_cand_search         = -1;
 
-        double rr_cur = 0;
-        double rr_last = 0;
-        int[] rr = new int[last_qrs.length - 1];
+        double rr_cur               = 0;
+        double rr_last              = 0;
+        int[] rr                    = new int[last_qrs.length - 1];
 
-        //// Filter Stage
+        /* Filter Stage */
         List<Double> b_low = new ArrayList<>(Arrays.asList(-0.00300068847555824, -0.0888956549729993, -0.00978073251699008, -0.00913537555132255, -0.00348493467952550, 0.00341086079804900, 0.0102865391156571, 0.0156935263250855, 0.0182699445494703, 0.0171711581672353, 0.0120921576301221, 0.00357779560317851, -0.00713041168615247, -0.0180134156879530, -0.0268696487375390, -0.0313147178636851, -0.0295416693658266, -0.0203155162205885, -0.00356416221151197, 0.0196106546763700, 0.0473078208714944, 0.0765698351683510, 0.104067354017840, 0.126566433194386, 0.141348431488521, 0.146497228887632, 0.141348431488521, 0.126566433194386, 0.104067354017840, 0.0765698351683510, 0.0473078208714944, 0.0196106546763700, -0.00356416221151197, -0.0203155162205885, -0.0295416693658266, -0.0313147178636851, -0.0268696487375390, -0.0180134156879530, -0.00713041168615247, 0.00357779560317851, 0.0120921576301221, 0.0171711581672353, 0.0182699445494703, 0.0156935263250855, 0.0102865391156571, 0.00341086079804900, -0.00348493467952550, -0.00913537555132255, -0.00978073251699008, -0.0888956549729993, -0.00300068847555824));
         List<Double> b_high = new ArrayList<>(Arrays.asList(-0.228978661265879, -0.00171102587088224, -0.00170984736925881, -0.00172585023852312, -0.00171670183861103, -0.00173441466404043, -0.00172074947278717, -0.00174642908958524, -0.00172358128257744, -0.00179523693754943, -0.00152325352849759, -0.00174186673973176, -0.00181454686131743, -0.00178950839600038, -0.00181602269748676, -0.00179779361369206, -0.00181709183410123, -0.00179726831399164, -0.00181784648985584, -0.00177254752223322, -0.00182670159370370, -0.00180614699233377, -0.00176688340230918, -0.00178033152841735, -0.00176699315180865, 0.998222620155216, -0.00176699315180865, -0.00178033152841735, -0.00176688340230918, -0.00180614699233377, -0.00182670159370370, -0.00177254752223322, -0.00181784648985584, -0.00179726831399164, -0.00181709183410123, -0.00179779361369206, -0.00181602269748676, -0.00178950839600038, -0.00181454686131743, -0.00174186673973176, -0.00152325352849759, -0.00179523693754943, -0.00172358128257744, -0.00174642908958524, -0.00172074947278717, -0.00173441466404043, -0.00171670183861103, -0.00172585023852312, -0.00170984736925881, -0.00171102587088224, -0.228978661265879));
         List<Double> b_avg = new ArrayList<>(Arrays.asList(0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625, 0.0625));
@@ -160,8 +157,9 @@ public class SignalProcessing {
         int delay = 59;
         mSignal = circshift(mSignal,delay);
 
-        /* Detection*/
+        /* QRS detection*/
         int i = 0;
+
         // Loop through entire signal
         while (i < org_length) {
 
@@ -171,7 +169,6 @@ public class SignalProcessing {
             }
 
             // Candidate QRS value is the maximum value and position from initial high threshold crossing to a refractory period after that
-
             // Check if refractory period is over (If not, don't check for new QRS)
             time_since_last_qrs = i - last_qrs[0];
 
@@ -240,7 +237,6 @@ public class SignalProcessing {
                         candidate_pos = i;
                     }
 
-
                 } else if (time_since_last_qrs > rr_tolerance[1] && !first_candidate) {
                     // Adjust threshold and search again.
                     h_thresh = 0.9 * h_thresh;
@@ -255,12 +251,10 @@ public class SignalProcessing {
                     // Check if high threshold is surpassed
                     if (mSignal.get(i) > h_thresh) {
                         // Make this position the first candidate value
-                        //candidate = mSignal[i];
                         candidate = mSignal.get(i);
                         candidate_pos = i;
                         candidate_detected = true;
-                        // Set candidate search to refractory period from
-                        // current candidate.
+                        // Set candidate search to refractory period from current candidate.
                         end_cand_search = i + REFRACTORY_PERIOD;
                     }
                     if (first_candidate) {
@@ -273,7 +267,7 @@ public class SignalProcessing {
 
             i = i + 1;
         }
-        // let us print all the elements available in list
+        // Let us print all the elements available in list
         for (Double number : h_thres_array) {
             System.out.println("H_thres_array = " + number);
         }
@@ -303,11 +297,12 @@ public class SignalProcessing {
     }
 
     private List<List<Double>> segments_around_qrs(List<Integer> qrsloc) {
-        // INPUT:
-        //      - mSignal:   raw mSignal (or filtered mSignal from detect_qrs()?)
-        // OUTPUT:
-        //      - mSegments:  mSegments consisting of ±200 ms around each QRS complex
-
+        /*
+        INPUT
+        mSignal:   filtered mSignal from detect_qrs()
+        OUTPUT
+        mSegments:  mSegments consisting of ±200 ms around each QRS complex
+        */
         List<List<Double>> segments = new ArrayList<>();
 
         List segment;
@@ -333,13 +328,15 @@ public class SignalProcessing {
 
 
     private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, List<Integer> qrs_loc) {
-        // INPUT:
-        //      - mSegments:  Segmented mSignal from segments_around_qrs()
-        //      - mQrs:  Segmented mSignal from segments_around_qrs()
-        //      - mSignal:  Segmented mSignal from segments_around_qrs()
-        // OUTPUT:
-        //      - features: Computed feature vector
+        /*
+        INPUT
+        mSegments:  Segmented mSignal from segments_around_qrs()
+        mQrs:  Segmented mSignal from segments_around_qrs()
+        mSignal:  Segmented mSignal from segments_around_qrs()
 
+        OUTPUT
+        features: Computed feature vector
+        */
         ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
 
         ArrayList<Double> features = new ArrayList<>();
@@ -352,13 +349,13 @@ public class SignalProcessing {
 
             double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
 
-            // Feature 1
+            // Feature 1: RR feature
             features.add(K / rr_intervals.get(iSegment - 1));
-            // Feature 2
+            // Feature 2: RR feature
             features.add(K / rr_intervals.get(iSegment));
 
-            // Feature 3-17
-            // Implement wavelet transform from Jwave.
+            // Feature 3-17: JWave feature
+            // Implement wavelet transform from JWave.
             double[] wavelet_coefficients;
             Transform t = new Transform(new AncientEgyptianDecomposition(new FastWaveletTransform(new Daubechies4())));
             wavelet_coefficients = t.forward(segmentArray);
@@ -376,12 +373,14 @@ public class SignalProcessing {
     }
 
     private List<String> classify_segments(ArrayList<ArrayList<Double>> all_features) {
-        // INPUT:
-        //      - segments:
-        //      - features:
-        // OUTPUT:
-        //      - segments:  The three segments consisting of ±200 ms around each QRS complex
+        /*
+        INPUT
+        segments:
+        features:
 
+        OUTPUT
+        segments:  The three segments consisting of ±200 ms around each QRS complex
+        */
         ArrayList<String> classification = new ArrayList<String>();
         String group_belonging;
 
@@ -489,10 +488,13 @@ public class SignalProcessing {
 //
 
     private List<Integer> compute_RR(List<Integer> qrs_loc) {
-        // INPUT:
-        //      - qrs_loc:  qrs locations in samples
-        // OUTPUT:
-        //      - rr_intervals: computed RR-intervals in samples
+        /*
+        INPUT
+        qrs_loc:  qrs locations in samples
+
+        OUTPUT
+        rr_intervals: computed RR-intervals in samples
+        */
         List<Integer> rr_intervals = new ArrayList<Integer>();
 
         for (int i = 0; i <= qrs_loc.size() - 2; i++) {
@@ -640,8 +642,6 @@ public class SignalProcessing {
         }
     }
 
-    // http://stackoverflow.com/questions/4191687/how-to-calculate-mean-median-mode-and-range-from-a-set-of-numbers :
-    // http://stackoverflow.com/questions/8835464/qrs-detection-in-java-from-ecg-byte-array
     public static double mean(int[] m) {
         double sum = 0;
         for (int i = 0; i < m.length; i++) {
