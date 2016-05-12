@@ -26,14 +26,10 @@ import jwave.transforms.wavelets.daubechies.Daubechies4;
 
 public class SignalProcessing {
 
-    static final String TAG = "SignalProcessing";
-    static final int NUMBER_OF_FEATURES = 17;
     static final int FS = 360; // Sample rate in Hz
     static final int SEGMENT_LENGTH = (int) Math.floor((200.0 / 1000) * FS);
     static final int REFRACTORY_PERIOD = (int) Math.floor((250.0 / 1000) * FS);
-    private static SVMStruct mSVMStruct_VT;
     private static SVMStruct mSVMStruct_AF;
-    private static SVMStruct mSVMStruct_N;
     final Context mContext;
     public List<Double> mSignal = new ArrayList<>();
     public ArrayList<ArrayList<Double>> mSegments = new ArrayList<>();
@@ -41,9 +37,7 @@ public class SignalProcessing {
 
     public SignalProcessing(Context context) {
         mContext = context;
-        mSVMStruct_VT = new SVMStruct(mContext, "vt");
         mSVMStruct_AF = new SVMStruct(mContext, "af");
-        mSVMStruct_N = new SVMStruct(mContext, "n");
     }
 
     // TODO: check sorting is correct
@@ -151,11 +145,6 @@ public class SignalProcessing {
     }
 
     private List<Integer> detect_qrs() {
-
-
-/**
- * Created by Tine on 02-05-2016.
- */
 //------------------QRS Detection Function---------------------------------%
 //- This is a starting point including the filtering stages for a QRS
 //algorithm. The b and a parameters are meant for 4 filtering stages, and
@@ -354,8 +343,6 @@ public class SignalProcessing {
         }
 
         return qrs_loc;
-
-        //TODO: if qrs_loc contains no ones - return empty list
     }
 
     public int[] diff(int[] last_qrs) {
@@ -542,7 +529,6 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
         //      - features: Computed feature vector
 
     ArrayList<ArrayList<Double>> all_features = new ArrayList<ArrayList<Double>>();
-    //double[] features = new double[NUMBER_OF_FEATURES];
 
     ArrayList<Double> features = new ArrayList<>();
     List<Integer> rr_intervals = compute_RR(qrs_loc);
@@ -555,9 +541,9 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
             double K = 300; //Estimate since in Song (2005) they have a fs = 360 and K=300
 
             // Feature 1
-            features.add(K / rr_intervals.get(iSegment - 1)); //TODO: iSegment ??
+            features.add(K / rr_intervals.get(iSegment - 1));
             // Feature 2
-            features.add(K / rr_intervals.get(iSegment)); //TODO: iSegment + 1 ??
+            features.add(K / rr_intervals.get(iSegment));
 
             // Feature 3-17
             // Implement wavelet transform from Jwave.
@@ -609,44 +595,21 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
 
             cur_features = Doubles.toArray(all_features.get(i));
 
-            // Estimate degree of belonging to VT group
-            int c1 = 0;
-            double bias1 = mSVMStruct_VT.getBias();
-            double[] alpha1 = mSVMStruct_VT.getAlpha();
-            double[][] vectors1 = mSVMStruct_VT.getSupportVectors();
-            for (int ii = 0; ii < mSVMStruct_VT.getNumberOfVectors(); ii++) {
-                c1 += alpha1[ii] * innerProduct(vectors1[ii], cur_features) + bias1;
-            }
-
             // Estimate degree of belonging to AF group
-            int c2 = 0;
+            int c = 0;
             double bias2 = mSVMStruct_AF.getBias();
             double[] alpha2 = mSVMStruct_AF.getAlpha();
             double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
             for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
-                c2 += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+                c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
             }
 
-            // Estimate degree of belonging to VT group
-            int c3 = 0;
-            double bias3 = mSVMStruct_N.getBias();
-            double[] alpha3 = mSVMStruct_N.getAlpha();
-            double[][] vectors3 = mSVMStruct_N.getSupportVectors();
-            for (int ii = 0; ii < mSVMStruct_N.getNumberOfVectors(); ii++) {
-                c3 += alpha3[ii] * innerProduct(vectors3[ii], cur_features) + bias3;
-            }
-
-            if (c3 > c1 && c3 > c2) {
-                group_belonging = "N";
-            } else if (c2 > c1 && c2 > c3) {
+            if (c > 0) { // TODO: skal c1 være over eller under 0?
                 group_belonging = "AF";
             } else {
-                group_belonging = "VT";
+                group_belonging = "N"; // TODO: ??
             }
-
             classification.add(group_belonging);
-
-
         }
 
         return classification;
@@ -672,9 +635,6 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
         List<Arrhythmia> arrhythmias = extractArrhythmias(classification, qrs_loc);
 
         ParseObject.saveAllInBackground(arrhythmias);
-
-        //TODO: Save signal segments to database or maybe just QRS locations?
-
     }
 
     private double[] asArray(ArrayList<Double> arrayList) {
@@ -710,13 +670,14 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
     }
 
     private List<Arrhythmia> extractArrhythmias(List<String> detected_arrhythmias, List<Integer> qrs_loc) {
+
         List<Arrhythmia> arrhythmias = new ArrayList<>();
         List<Integer> cur_arrhythmias = new ArrayList<>();
         String arrhythmia;
-
         boolean arrhythmia_found = true;
         int i = 0;
         arrhythmia = "";
+
         while (i < detected_arrhythmias.size()) {
             arrhythmia = detected_arrhythmias.get(i);
             if (!arrhythmia.equals("N")) {
@@ -724,7 +685,6 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
                 cur_arrhythmias.add(i);
             } else if (arrhythmia_found) {
                 arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
-
                 arrhythmia_found = false;
                 cur_arrhythmias.clear();
             }
@@ -733,7 +693,6 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
         if (cur_arrhythmias.size() > 0) {
             arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
         }
-
         return arrhythmias;
     }
 
@@ -747,7 +706,4 @@ private ArrayList<ArrayList<Double>> get_features(List<List<Double>> segments, L
 
         return qrs_loc;
     }
-
-
-
 }
