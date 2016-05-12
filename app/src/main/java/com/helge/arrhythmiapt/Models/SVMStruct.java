@@ -11,32 +11,19 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by ThereseSchoenemann on 05-05-2016.
- */
 public class SVMStruct {
+    /*
+        Class representing a support vector machine classifier. The support vectors, bias and
+        other parameters are saved locally, and this class is simply an interface for loading the
+        parameters and returning them in a convenient way.
+     */
     Context mContext;
     private double[][] mSupportVectors;
     private double[] mAlpha;
     double mBias;
     String mArrhythmiaType;
 
-    public int getNumberOfVectors() {
-        return getSupportVectors()[0].length;
-    }
-
-    public double[][] getSupportVectors() {
-        return mSupportVectors;
-    }
-
-    public double[] getAlpha() {
-        return mAlpha;
-    }
-
-    public double getBias() {
-        return mBias;
-    }
-
+    // Contstructor. If more SVMs are present, the type can be specified.
     public SVMStruct(Context context, String arrhythmiaType) {
         mContext = context;
         mArrhythmiaType = arrhythmiaType;
@@ -49,24 +36,26 @@ public class SVMStruct {
     }
 
     private void loadSVMStruct() throws IOException {
+        // Loads the SVM structure from local data storage.
+
         List<ArrayList<Double>> supportVectorsList = new ArrayList<>();
         List<Double> alphaList = new ArrayList<>();
-
         String pname = mContext.getPackageName();
-
         int svID = mContext.getResources().getIdentifier("raw/supportvectors_" + mArrhythmiaType, null, pname);
         int alphaID = mContext.getResources().getIdentifier("raw/alpha_" + mArrhythmiaType, null, pname);
         int biasID = mContext.getResources().getIdentifier("raw/bias_" + mArrhythmiaType, null, pname);
 
-        //The file is saved in the internal storage , and is found as such:
+
         InputStream modelSupportVectors = mContext.getResources().openRawResource(svID);
         InputStream alpha = mContext.getResources().openRawResource(alphaID);
         InputStream bias = mContext.getResources().openRawResource(biasID);
-        //The file is read:
+
+        // The file is read:
         BufferedReader readerSV = new BufferedReader(new InputStreamReader(modelSupportVectors));
         BufferedReader readerAlpha = new BufferedReader(new InputStreamReader(alpha));
         BufferedReader readerBias = new BufferedReader(new InputStreamReader(bias));
 
+        // Convert files to java data types
         ArrayList<Double> row = new ArrayList<>();
         try {
             String line;
@@ -96,6 +85,7 @@ public class SVMStruct {
             }
         }
 
+        // Convert to primitive types
         mSupportVectors = new double[supportVectorsList.size()][supportVectorsList.get(0).size()];
 
         for (int i = 0; i < supportVectorsList.size(); i++) {
@@ -106,4 +96,21 @@ public class SVMStruct {
         mAlpha = Doubles.toArray(alphaList);
 
     }
+
+    public int getNumberOfVectors() {
+        return getSupportVectors()[0].length;
+    }
+
+    public double[][] getSupportVectors() {
+        return mSupportVectors;
+    }
+
+    public double[] getAlpha() {
+        return mAlpha;
+    }
+
+    public double getBias() {
+        return mBias;
+    }
+
 }
