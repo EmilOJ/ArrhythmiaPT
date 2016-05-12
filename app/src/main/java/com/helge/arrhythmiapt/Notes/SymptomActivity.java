@@ -17,6 +17,12 @@ import com.helge.arrhythmiapt.R;
 import java.util.Calendar;
 
 public class SymptomActivity extends AppCompatActivity {
+    /*
+        This activity is displayed for when symptoms are selected in SymptomsActivity. It includes
+        a time selector and a text field. If more symptoms are selected in SymptomsActivity,
+        the fields are reset when pressing continue until all symptoms have received input.
+        In this version the entered information is not stored anywhere.
+     */
 
     private static TextView symptomTextView;
     private static EditText timeEditText;
@@ -35,6 +41,7 @@ public class SymptomActivity extends AppCompatActivity {
         continueButton = (Button) findViewById(R.id.symptomContinueButton);
         detailsEditText = (EditText) findViewById(R.id.editText2);
 
+        // Receives the list of selected symptoms from SymptomsActivity
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             mSymptomsId = extras.getIntArray("checkedIds");
@@ -42,6 +49,7 @@ public class SymptomActivity extends AppCompatActivity {
             nextSypmtom();
         }
 
+        // Shows time selector popup
         timeEditText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +78,9 @@ public class SymptomActivity extends AppCompatActivity {
     }
 
     private void nextSypmtom() {
+        /*
+            Clears both input fields and shows the next symptom in the headline.
+         */
         if (mCur_id == mSymptomsId.length) {
             Intent i = new Intent(this, MainMenu.class);
             startActivity(i);

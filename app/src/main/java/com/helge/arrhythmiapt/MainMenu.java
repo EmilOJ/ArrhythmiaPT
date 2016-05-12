@@ -15,6 +15,11 @@ import com.helge.arrhythmiapt.Notes.SymptomsActivity;
 import java.io.IOException;
 
 public class MainMenu extends AppCompatActivity {
+    /*
+        Main menu which shows a record button and a notes button.
+        It also shows patient information.
+     */
+
     private static Button notesButton;
     private static Button qButton;
 
@@ -22,6 +27,44 @@ public class MainMenu extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
+
+        notesButton = (Button) findViewById(R.id.notesButton);
+        notesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainMenu.this, NotesListActivity.class);
+                startActivity(i);
+            }
+        });
+
+
+        // Proxy button for displaying questions. This should in reality be implemented
+        // as an AlarmManager so the questions will be displayed every 8 hours.
+        qButton = (Button) findViewById(R.id.questionButton);
+        qButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainMenu.this)
+                        .setIcon(android.R.drawable.ic_menu_add)
+                        .setTitle("Time for questions")
+                        .setMessage("Have you felt any symptoms since last time?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent i = new Intent(MainMenu.this, SymptomsActivity.class);
+                                startActivity(i);
+                            }
+
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
+        });
+
+
+        // Hardcoded patient information. This should in reality be implemented as a query
+        // to the database.
 
         String patientName = "Lone Hansen";
         String patientCPR = "111100-1111";
@@ -46,40 +89,9 @@ public class MainMenu extends AppCompatActivity {
         textView11.setText("(asthma and obstructive pulmonary disease)");
 
 
-        notesButton = (Button) findViewById(R.id.notesButton);
-
-        notesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(MainMenu.this, NotesListActivity.class);
-                startActivity(i);
-            }
-        });
-
-        qButton = (Button) findViewById(R.id.questionButton);
-        qButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(MainMenu.this)
-                        .setIcon(android.R.drawable.ic_menu_add)
-                        .setTitle("Time for questions")
-                        .setMessage("Have you felt any symptoms since last time?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
-                        {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent i = new Intent(MainMenu.this, SymptomsActivity.class);
-                                startActivity(i);
-                            }
-
-                        })
-                        .setNegativeButton("No", null)
-                        .show();
-            }
-        });
-
-
-
+        // Simulation of recording the signal. This creates an instance of the signal
+        // processing class which reads a signal from a local csv file and run the
+        // detection algorithm.
         SignalProcessing signalProcessing = new SignalProcessing(this);
         try {
             signalProcessing.readECG();

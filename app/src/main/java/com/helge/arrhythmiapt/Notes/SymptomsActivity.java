@@ -15,13 +15,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SymptomsActivity extends AppCompatActivity {
+    /*
+        Displays a list of symptoms which can be selected and then starts the SymptomActivity.
+     */
+
     private static Button continueButton;
     private static RadioGroup radioGroup;
     List<CheckBox> checkBoxes = new ArrayList<>();
 
 
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_symptoms_main);
@@ -31,7 +34,7 @@ public class SymptomsActivity extends AppCompatActivity {
         continueButton = (Button) findViewById(R.id.continueButton);
         radioGroup = (RadioGroup) findViewById(R.id.symptomsRadioGroup);
 
-
+        // Collect all checkboxes in a List
         for (int i = 1; i <= radioGroup.getChildCount(); i++) {
             String idString = "checkBox" + i;
             int id = getResources().getIdentifier(idString, "id", getPackageName());
@@ -39,6 +42,8 @@ public class SymptomsActivity extends AppCompatActivity {
         }
 
         continueButton.setOnClickListener(new View.OnClickListener() {
+            // Count which checkboxes are checked and send this information together with
+            // the intent to SymptomActivity. If none are checked it returns to the Main Menu
             @Override
             public void onClick(View v) {
                 List<Integer> checkedIdList = new ArrayList<Integer>();
@@ -57,18 +62,11 @@ public class SymptomsActivity extends AppCompatActivity {
                     i.putExtra("checkedIds", checkedId);
                     startActivity(i);
                 } else {
+                    // Return to main menu (close this activity)
                     finish();
                 }
 
             }
         });
-
-
-
-
-
-
-
-
     }
 }

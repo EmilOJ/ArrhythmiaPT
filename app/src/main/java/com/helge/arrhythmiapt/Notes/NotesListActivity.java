@@ -17,6 +17,12 @@ import com.parse.ParseObject;
 import com.parse.ParseQueryAdapter;
 
 public class NotesListActivity extends AppCompatActivity {
+    /*
+        ListView displaying all Notes in the database for the current user. Uses the NotesAdapter
+        to load and display the data. Also starts the NoteEditActivity when tapping either of
+        the notes on the list.
+        Includes a broadcastreceiver for updating the list when notes are synced from database.
+     */
 
     private ParseQueryAdapter<ParseObject> notesAdapter;
     private ListView notesListView;
@@ -40,25 +46,26 @@ public class NotesListActivity extends AppCompatActivity {
         notesListView.setAdapter(notesAdapter);
         notesAdapter.loadObjects();
 
-
+        //Set the ListAdapter which retrives and processes the data to be displayed
         newNoteButton = (Button) findViewById(R.id.addButton);
         newNoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NotesListActivity.this, NoteEditActivity.class);
-                i.putExtra("new", true);
+                i.putExtra("new", true); // add "new" as extra which is recognized in editActivity
                 startActivity(i);
             }
         });
 
+
         notesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i                = new Intent(NotesListActivity.this, NoteEditActivity.class);
+                Intent i = new Intent(NotesListActivity.this, NoteEditActivity.class);
                 ParseObject noteObject = notesAdapter.getItem(position);
                 noteObject.pinInBackground();
 
-                String noteID           = noteObject.getObjectId();
+                String noteID = noteObject.getObjectId();
                 i.putExtra("noteID", noteID);
 
                 startActivity(i);

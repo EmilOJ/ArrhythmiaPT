@@ -21,6 +21,10 @@ import com.parse.SaveCallback;
 import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
+    /*
+         Lets the patient login with username and password using the ParseUser object.
+         Also includes a button for registering a new user.
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,14 +35,13 @@ public class LoginActivity extends AppCompatActivity {
         final EditText etPassword = (EditText) findViewById(R.id.etPassword);
         final Button bLogin = (Button) findViewById(R.id.bLogin);
         final TextView registerLink = (TextView) findViewById(R.id.tvRegisterHere);
-        //final Button goButton = (Button) findViewById(R.id.goButton);
 
         assert etUsername != null;
         assert etPassword != null;
         assert bLogin != null;
         assert registerLink != null;
-        //assert goButton != null;
 
+        // Start register user activity
         registerLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        // Get entered username and password and send a login request in the background.
         bLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,11 +58,10 @@ public class LoginActivity extends AppCompatActivity {
                 String password = etPassword.getText().toString();
                 bLogin.setEnabled(false);
 
-
+                // Login in background and start the main menu on success.
                 ParseUser.logInInBackground(username, password, new LogInCallback() {
                     public void done(ParseUser user, ParseException e) {
                         if (user != null) {
-                            // Hooray! The user is logged in.
                             Intent i = new Intent(LoginActivity.this, MainMenu.class);
                             startActivity(i);
                         } else {
@@ -69,27 +72,12 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-       /* goButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(LoginActivity.this, MainMenu.class);
-                startActivity(i);
-            }
-        });*/
-
-//      Get intent extra and display status
-        Bundle extras = getIntent().getExtras();
-        String status;
-
-        if (extras != null) {
-            status = extras.getString("status");
-        }
-
         // Fetch notes from Parse server in background and save locally
         fetchNotes();
 
     }
 
+    // Fetch notes from database
     private void fetchNotes() {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Note");
         query.findInBackground(new FindCallback<ParseObject>() {
@@ -106,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    // When fetchNote() is done, a broadcast is sent such that the NotesList will be update
     private void sendDoneBroadcast() {
         Intent intent = new Intent("doneFetchingData");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
