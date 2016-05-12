@@ -40,7 +40,7 @@ public class SignalProcessing {
         mSVMStruct_AF = new SVMStruct(mContext, "af");
     }
 
-    // TODO: check sorting is correct
+    // TODO: check sorting is correct...
     public static double median(double[] m) {
         int middle = m.length / 2;
         java.util.Arrays.sort(m);
