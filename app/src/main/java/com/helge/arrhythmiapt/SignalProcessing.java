@@ -24,6 +24,8 @@ import jwave.transforms.AncientEgyptianDecomposition;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
 
+
+
 public class SignalProcessing {
 
     static final int FS                 = 360; // Sample rate in Hz
@@ -377,20 +379,22 @@ public class SignalProcessing {
             cur_features = Doubles.toArray(all_features.get(i));
 
             // Estimate degree of belonging to AF group
-            int c = 0;
-            double bias2 = mSVMStruct_AF.getBias();
-            double[] alpha2 = mSVMStruct_AF.getAlpha();
-            double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
-            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
-                c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
-            }
+            //int c = 0;
+            //double bias2 = mSVMStruct_AF.getBias();
+            //double[] alpha2 = mSVMStruct_AF.getAlpha();
+            //double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
+            //for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
+            //    c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+            //}
 
-            if (c < 0) { // TODO: skal c1 være over eller under 0?
-                group_belonging = "AF";
-            } else {
-                group_belonging = "N";
-            }
-            classification.add(group_belonging);
+            //if (c < 0) { // TODO: skal c1 være over eller under 0?
+            //    group_belonging = "AF";
+            //} else {
+            //    group_belonging = "N";
+            //}
+            //classification.add(group_belonging);
+
+            //svm_train [] training_set_file [model_file];
         }
 
         return classification;
