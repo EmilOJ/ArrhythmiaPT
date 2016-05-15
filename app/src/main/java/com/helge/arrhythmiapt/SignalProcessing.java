@@ -369,7 +369,7 @@ public class SignalProcessing {
         String group_belonging;
 
         double[] c = new double[all_features.size()];
-        
+
         // classify each segment
         for (int i = 0; i < all_features.size(); i++) {
 
@@ -506,7 +506,7 @@ public class SignalProcessing {
     private double innerProduct(double[] a, double[] b) {
 
         double product = 0;
-        for (int i = 0; i < a.length - 1; i++) {
+        for (int i = 0; i < a.length; i++) {
             product += a[i] * b[i];
         }
 
