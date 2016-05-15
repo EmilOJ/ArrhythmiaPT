@@ -368,7 +368,8 @@ public class SignalProcessing {
         ArrayList<String> classification = new ArrayList<String>();
         String group_belonging;
 
-
+        double[] c = new double[all_features.size()];
+        
         // classify each segment
         for (int i = 0; i < all_features.size(); i++) {
 
