@@ -23,6 +23,7 @@ import jwave.Transform;
 import jwave.transforms.AncientEgyptianDecomposition;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
+import libsvm.svm;
 
 public class SignalProcessing {
 
@@ -368,7 +369,7 @@ public class SignalProcessing {
         ArrayList<String> classification = new ArrayList<String>();
         String group_belonging;
 
-
+        double[] c = new double[all_features.size()];
         // classify each segment
         for (int i = 0; i < all_features.size(); i++) {
 
@@ -377,15 +378,29 @@ public class SignalProcessing {
             cur_features = Doubles.toArray(all_features.get(i));
 
             // Estimate degree of belonging to AF group
-            int c = 0;
-            double bias2 = mSVMStruct_AF.getBias();
-            double[] alpha2 = mSVMStruct_AF.getAlpha();
-            double[][] vectors2 = mSVMStruct_AF.getSupportVectors();
-            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
-                c += alpha2[ii] * innerProduct(vectors2[ii], cur_features) + bias2;
+            c[i] = 0;
+            double bias = mSVMStruct_AF.getBias();
+            double[] alpha = mSVMStruct_AF.getAlpha();
+            double[][] vectors = mSVMStruct_AF.getSupportVectors();
+            double[] shift = mSVMStruct_AF.getShift();
+            double[] scaleFactor = mSVMStruct_AF.getScaleFactor();
+
+
+
+            // Scaling
+            for (int ii = 0; ii < all_features.get(0).size(); ii++) {
+                cur_features[ii] = scaleFactor[ii] * (cur_features[ii] + shift[ii]);
             }
 
-            if (c < 0) { // TODO: skal c1 være over eller under 0?
+            // Classification
+            for (int ii = 0; ii < mSVMStruct_AF.getNumberOfVectors(); ii++) {
+                c[i] += alpha[ii] * innerProduct(vectors[ii], cur_features) + bias;
+            }
+
+            // Threshold is signal specific and can only be obtained from using svmclassify
+            // in matlab. See article for details.
+            double threshold = 0;
+            if (c[i] < threshold) {
                 group_belonging = "AF";
             } else {
                 group_belonging = "N";
@@ -519,9 +534,6 @@ public class SignalProcessing {
             }
             i++;
         }
-        //if (cur_arrhythmias.size() > 0) {
-        //    arrhythmias.add(computeArrhythmiaTimes(cur_arrhythmias, qrs_loc, arrhythmia));
-        //}
         return arrhythmias;
     }
 

@@ -20,6 +20,8 @@ public class SVMStruct {
     Context mContext;
     private double[][] mSupportVectors;
     private double[] mAlpha;
+    private double[] mShift;
+    private double[] mScaleFactor;
     double mBias;
     String mArrhythmiaType;
 
@@ -40,20 +42,28 @@ public class SVMStruct {
 
         List<ArrayList<Double>> supportVectorsList = new ArrayList<>();
         List<Double> alphaList = new ArrayList<>();
+        List<Double> shiftList = new ArrayList<>();
+        List<Double> scaleFactorList = new ArrayList<>();
         String pname = mContext.getPackageName();
-        int svID = mContext.getResources().getIdentifier("raw/supportvectors_" + mArrhythmiaType, null, pname);
-        int alphaID = mContext.getResources().getIdentifier("raw/alpha_" + mArrhythmiaType, null, pname);
-        int biasID = mContext.getResources().getIdentifier("raw/bias_" + mArrhythmiaType, null, pname);
+        int svID = mContext.getResources().getIdentifier("raw/supportvectors", null, pname);
+        int alphaID = mContext.getResources().getIdentifier("raw/alpha", null, pname);
+        int biasID = mContext.getResources().getIdentifier("raw/bias", null, pname);
+        int shiftID = mContext.getResources().getIdentifier("raw/shift", null, pname);
+        int scaleFactorID = mContext.getResources().getIdentifier("raw/scalefactor", null, pname);
 
 
         InputStream modelSupportVectors = mContext.getResources().openRawResource(svID);
         InputStream alpha = mContext.getResources().openRawResource(alphaID);
         InputStream bias = mContext.getResources().openRawResource(biasID);
+        InputStream shift = mContext.getResources().openRawResource(shiftID);
+        InputStream scaleFactor = mContext.getResources().openRawResource(scaleFactorID);
 
         // The file is read:
         BufferedReader readerSV = new BufferedReader(new InputStreamReader(modelSupportVectors));
         BufferedReader readerAlpha = new BufferedReader(new InputStreamReader(alpha));
         BufferedReader readerBias = new BufferedReader(new InputStreamReader(bias));
+        BufferedReader readerShift = new BufferedReader(new InputStreamReader(shift));
+        BufferedReader readerScaleFactor = new BufferedReader(new InputStreamReader(scaleFactor));
 
         // Convert files to java data types
         ArrayList<Double> row = new ArrayList<>();
@@ -65,7 +75,7 @@ public class SVMStruct {
                     row.add(Double.parseDouble(RowData[i]));
                 }
 
-                supportVectorsList.add(row);
+                supportVectorsList.add(new ArrayList<Double>(row));
                 row.clear();
             }
             while ((line = readerAlpha.readLine()) != null) {
@@ -76,12 +86,21 @@ public class SVMStruct {
                 String[] DataBias = line.split("\t");
                 mBias = Double.parseDouble(DataBias[0]);
             }
+            while ((line = readerShift.readLine()) != null) {
+                String[] DataAlpha = line.split("\t");
+                shiftList.add(Double.parseDouble(DataAlpha[0]));
+            }
+            while ((line = readerScaleFactor.readLine()) != null) {
+                String[] DataAlpha = line.split("\t");
+                scaleFactorList.add(Double.parseDouble(DataAlpha[0]));
+            }
         } catch (IOException ex) {
 
             } finally {
                 try {
                     modelSupportVectors.close();
                 } catch (IOException e) {
+                    e.printStackTrace();
             }
         }
 
@@ -95,6 +114,11 @@ public class SVMStruct {
         mAlpha = new double[alphaList.size()];
         mAlpha = Doubles.toArray(alphaList);
 
+        mShift = new double[shiftList.size()];
+        mShift = Doubles.toArray(shiftList);
+
+        mScaleFactor = new double[scaleFactorList.size()];
+        mScaleFactor = Doubles.toArray(scaleFactorList);
     }
 
     public int getNumberOfVectors() {
@@ -113,4 +137,11 @@ public class SVMStruct {
         return mBias;
     }
 
+    public double[] getShift() {
+        return mShift;
+    }
+
+    public double[] getScaleFactor() {
+        return mScaleFactor;
+    }
 }
