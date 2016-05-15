@@ -54,7 +54,6 @@ public class ECGRecording extends ParseObject {
         }
     }
 
-
     // Get all Arrhythmia objects associated with this ECG recording.
     public List<Arrhythmia> getArrhythmias() {
         List<Arrhythmia> aList;
@@ -69,7 +68,6 @@ public class ECGRecording extends ParseObject {
         }
         return aList;
     }
-
 
     // Converts ECG data to a List<DataPoints> where DataPoints is a data type from the GraphView
     // library which is used for plotting.
@@ -104,7 +102,6 @@ public class ECGRecording extends ParseObject {
 
         return maxValue;
     }
-
 
     /* All methods below are trivial getters and setters */
 

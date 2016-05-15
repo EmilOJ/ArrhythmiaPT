@@ -71,7 +71,7 @@ public class SignalProcessing {
         // High-pass filter signal
         filter_signal();
 
-        // Extract ±200 ms mSegments around QRS. This is used for classification.
+        // Extract +/- 200 ms mSegments around QRS. This is used for classification.
         segments = segments_around_qrs(qrs_loc);
 
         // Compute features
@@ -291,7 +291,7 @@ public class SignalProcessing {
         INPUT
         qrsloc:   array of QRS complex locations (1=QRS , 0=no QRS)
         OUTPUT
-        segments:  consists of ±200 ms around each QRS complex
+        segments:  consists of +/- 200 ms around each QRS complex
         */
         List<List<Double>> segments = new ArrayList<>();
 
@@ -363,7 +363,7 @@ public class SignalProcessing {
         features:
 
         OUTPUT
-        segments:  The three segments consisting of ±200 ms around each QRS complex
+        segments:  The three segments consisting of +/- 200 ms around each QRS complex
         */
         ArrayList<String> classification = new ArrayList<String>();
         String group_belonging;
