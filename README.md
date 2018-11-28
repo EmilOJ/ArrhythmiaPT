@@ -16,6 +16,9 @@ and includes:
   - `filtfilt()`
   - `circshift()`
   - `demean()`
+  - `mean()`
+  - `median()`
+  - `diff()`
   - etc...
   
   
